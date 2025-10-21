@@ -1,4 +1,3 @@
- <script>
 pageFunctions.addFunction('nav2overlay', function() {
     gsap.matchMedia().add("(min-width: 992px)", () => {
         const navWrap = document.querySelectorAll('.nav_menu_contain, .nav_panels');
@@ -37,4 +36,3 @@ pageFunctions.addFunction('nav2overlay', function() {
         });
     });
 });
-</script>
