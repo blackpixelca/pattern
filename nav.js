@@ -29,7 +29,10 @@ pageFunctions.addFunction('nav2', function() {
             const linkLine = link.querySelector('.nav_underline');
             
             if (targetMenu) {
-                const desktopTl = gsap.timeline({ paused: true });
+                const desktopTl = gsap.timeline({ 
+                    paused: true,
+                    defaults: { ease: 'power2.out' } // Set default ease for all animations
+                });
                 
                 desktopTl.set(targetMenu, {
                     display: 'flex'
@@ -40,15 +43,13 @@ pageFunctions.addFunction('nav2', function() {
                 }, {
                     opacity: 1,
                     pointerEvents: 'auto',
-                    duration: 0.3,
-                    ease: 'power2.out'
+                    duration: 0.3
                 })
                 .fromTo(linkLine, {
                     width: '0%'
                 }, {
                     width: '100%',
-                    duration: 0.3,
-                    ease: 'power2.out'
+                    duration: 0.3
                 }, '<');
 
                 desktopNavData.set(link, { timeline: desktopTl, targetMenu });
@@ -74,18 +75,18 @@ pageFunctions.addFunction('nav2', function() {
             }
         }, 16);
 
-        // Add event listeners
+        // Add event listeners with passive option for better performance
         allNavLinks.forEach(link => {
             const navData = desktopNavData.get(link);
             if (navData) {
-                link.addEventListener('mouseenter', () => handleDesktopMouseEnter(link));
+                link.addEventListener('mouseenter', () => handleDesktopMouseEnter(link), { passive: true });
                 navData.targetMenu.addEventListener('mouseenter', () => {
                     desktopCurrentTimeline = navData.timeline;
-                });
+                }, { passive: true });
             }
         });
 
-        navWrapper.addEventListener('mouseleave', handleDesktopMouseLeave);
+        navWrapper.addEventListener('mouseleave', handleDesktopMouseLeave, { passive: true });
     });
 
     // Mobile navigation
@@ -101,7 +102,10 @@ pageFunctions.addFunction('nav2', function() {
             const linkIcon = link.querySelector('.nav_link_icon');
             
             if (targetMenu && targetPanel) {
-                const mobileTl = gsap.timeline({ paused: true });
+                const mobileTl = gsap.timeline({ 
+                    paused: true,
+                    defaults: { ease: 'power2.out' } // Set default ease for all animations
+                });
                 
                 mobileTl.set(targetMenu, {
                     height: 'auto'
@@ -110,20 +114,17 @@ pageFunctions.addFunction('nav2', function() {
                     height: 0
                 }, {
                     height: 'auto',
-                    duration: 0.001,
-                    ease: 'power2.out'
+                    duration: 0.001
                 })
                 .fromTo(targetPanel, {
                     y: '-1rem'
                 }, {
                     y: 0,
-                    duration: 0.4,
-                    ease: 'power2.out'
+                    duration: 0.4
                 }, '<')
                 .to(linkIcon, {
                     rotation: 180,
-                    duration: 0.3,
-                    ease: 'power2.out'
+                    duration: 0.3
                 }, '<');
 
                 mobileNavData.set(link, { 
@@ -152,13 +153,13 @@ pageFunctions.addFunction('nav2', function() {
             }
         };
 
-        // Add event listeners
+        // Add event listeners with passive option for better performance
         allNavLinks.forEach(link => {
             if (mobileNavData.has(link)) {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
                     handleMobileClick(link);
-                });
+                }, { passive: false }); // Keep false for preventDefault
             }
         });
 
@@ -167,7 +168,7 @@ pageFunctions.addFunction('nav2', function() {
                 mobileCurrentTimeline.progress(0).pause();
                 mobileCurrentTimeline = null;
             }
-        });
+        }, { passive: true });
     });
 });
 </script>
