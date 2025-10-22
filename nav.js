@@ -1,8 +1,10 @@
 // Complete Navigation Script (No pageFunctions needed)
-document.addEventListener('DOMContentLoaded', function() {
+function initializeNavigation() {
     // Check if GSAP is available
     if (typeof gsap === 'undefined') {
-        console.error('GSAP is required for navigation functionality');
+        console.warn('GSAP not yet loaded, waiting...');
+        // Retry after a short delay
+        setTimeout(initializeNavigation, 100);
         return;
     }
 
@@ -167,4 +169,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
-});
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', initializeNavigation);
