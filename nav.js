@@ -1,12 +1,22 @@
-// Complete Navigation Script (No pageFunctions needed)
+// Log script loading sequence
+console.log('📜 Navigation script: Starting to load');
+console.log('📜 Navigation script: DOM ready state:', document.readyState);
+console.log('📜 Navigation script: GSAP available:', typeof gsap !== 'undefined');
+
 function initializeNavigation() {
+    console.log('🔄 Navigation: Initialization attempt started');
+    console.log('🔄 Navigation: GSAP available:', typeof gsap !== 'undefined');
+    console.log('🔄 Navigation: DOM ready state:', document.readyState);
+    
     // Check if GSAP is available
     if (typeof gsap === 'undefined') {
-        console.warn('GSAP not yet loaded, waiting...');
+        console.warn('⏳ GSAP not yet loaded, waiting... (attempt #' + (initializeNavigation.attemptCount = (initializeNavigation.attemptCount || 0) + 1) + ')');
         // Retry after a short delay
         setTimeout(initializeNavigation, 100);
         return;
     }
+    
+    console.log('✅ GSAP loaded successfully, proceeding with navigation setup');
 
     // Detect script source and log
     const currentScript = document.currentScript;
@@ -185,4 +195,9 @@ function initializeNavigation() {
 }
 
 // Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', initializeNavigation);
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🎯 DOMContentLoaded event fired');
+    console.log('🎯 DOM ready state:', document.readyState);
+    console.log('🎯 GSAP available at DOM ready:', typeof gsap !== 'undefined');
+    initializeNavigation();
+});
