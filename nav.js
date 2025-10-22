@@ -8,6 +8,19 @@ function initializeNavigation() {
         return;
     }
 
+    // Detect script source and log
+    const currentScript = document.currentScript;
+    const isExternalScript = currentScript && currentScript.src && currentScript.src.includes('github');
+    const isWebflowLocal = currentScript && (!currentScript.src || currentScript.src.includes('webflow'));
+    
+    if (isExternalScript) {
+        console.log('🚀 Navigation: Using external GitHub script');
+    } else if (isWebflowLocal) {
+        console.log('🏠 Navigation: Using local Webflow fallback');
+    } else {
+        console.log('📄 Navigation: Using inline script');
+    }
+
     // Desktop Navigation (min-width: 992px)
     gsap.matchMedia().add("(min-width: 992px)", () => {
         // Navigation Dropdown Logic
