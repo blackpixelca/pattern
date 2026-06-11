@@ -1,0 +1,6 @@
+/* Hide phantom NEXT button on the last page (page 2) */
+.w-pagination-next.is-list-pagination-disabled,
+.w-pagination-previous.is-list-pagination-disabled {
+  display: none !important;
+  pointer-events: none !important;
+}

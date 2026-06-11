@@ -1,0 +1,20 @@
+/* Animated underline for .nav_links_link - grows from left to right on hover */
+.nav_links_link {
+  position: relative;
+  text-decoration: none;
+}
+
+.nav_links_link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px; /* Adjust thickness as needed */
+  background-color: currentColor; /* Uses the link's text color - change to specific color if needed */
+  transition: width 0.3s ease-in-out; /* Adjust duration (0.3s) and easing as needed */
+}
+
+.nav_links_link:hover::after {
+  width: 100%;
+}

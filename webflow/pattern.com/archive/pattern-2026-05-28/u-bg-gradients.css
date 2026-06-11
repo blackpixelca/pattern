@@ -1,0 +1,49 @@
+
+  /* BG gradient/product dark — Figma node 364:995 */
+  .pattern-library-v2--u-bg-gradient-product-dark,
+  .u-bg-gradient-product-dark {
+    background:
+      radial-gradient(
+        ellipse 110% 100% at 50% 0%,
+        #EBF0F5 0%,
+        #EBF0F5 49.47%,
+        #0096FA 65.48%,
+        #C173FF 66.73%,
+        #3A55FF 68.58%,
+        #172266 82.62%,
+        #070708 97.36%
+      );
+  }
+  /* BG gradient/Hero Product Light — Figma node 364:1004 (from SVG paint0_radial_364_1004) */
+  .pattern-library-v2--u-bg-gradient-product-light,
+  .u-bg-gradient-product-light {
+    background:
+      radial-gradient(
+        ellipse 154% 197% at 50% 0%,
+        #070708 2.64%,
+        #0C1133 36.55%,
+        #172266 50.44%,
+        #3A55FF 70.08%,
+        #C173FF 73.39%,
+        #0096FA 75.88%,
+        #EBF0F5 96.4%,
+        #EBF0F5 100%
+      );
+  }
+
+  /* BG gradient/Section — Figma node 364:1009 (paint0_radial_364_1009); SVG has filter feGaussianBlur stdDeviation="40" */
+  .pattern-library-v2--u-bg-gradient-section,
+  .u-bg-gradient-section {
+    background:
+      radial-gradient(
+        ellipse 100% 180% at 50% 0%,
+        #070708 0%,
+        #171717 57.21%,
+        #2F0466 71.15%,
+        #3A55FF 77.79%,
+        #0096FA 84.44%,
+        #EBF0F5 96.41%
+      );
+  }
+
+  
