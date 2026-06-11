@@ -1,25 +1,28 @@
 # Webflow Footer Code Candidate
 
-Do not paste this into production until the `v1.0.0` jsDelivr URLs have been tested on a safe Webflow page or staging environment.
+Do not paste this into production until the `v1.0.1` jsDelivr URLs have been tested on a safe Webflow page or staging environment.
 
 Keep consent-gated vendor scripts unchanged. Replace only the listed Flowdrive support files.
 
 ## Replacement Support Assets
 
 ```html
-<!-- Pattern support assets served from GitHub release v1.0.0 through jsDelivr -->
-<script src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.0/webflow/pattern.com/scripts/media/video-popup.js"></script> <!-- Video Popup JS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.0/webflow/pattern.com/styles/pagination-fix.css"> <!-- Pagination Fix CSS -->
-<script src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.0/webflow/pattern.com/scripts/nav/v1-nav-desktop.js" defer></script> <!-- v1 Nav Desktop -->
-<script src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.0/webflow/pattern.com/scripts/nav/v1-nav-mobile.js" defer></script> <!-- v1 Nav Mobile -->
-<script src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.0/webflow/pattern.com/scripts/nav/v1-nav-mobile-block.js" defer></script> <!-- v1 Nav Mobile Block -->
-<script src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.0/webflow/pattern.com/scripts/content/logos.js" defer></script> <!-- Logos JS -->
-<script src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.0/webflow/pattern.com/scripts/content/rich-text-heading-conversion.js" defer></script> <!-- Rich Text Heading Conversion -->
-<script src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.0/webflow/pattern.com/scripts/schema/faq-schema-generator.js" defer></script> <!-- FAQ Schema Generator -->
-<script src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.0/webflow/pattern.com/scripts/interaction/accordion.js" defer></script> <!-- Accordion JS -->
-<script src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.0/webflow/pattern.com/scripts/interaction/lazy-load.js" defer></script> <!-- Lazy Load -->
-<script src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.0/webflow/pattern.com/scripts/content/cta-inject.js" defer></script> <!-- CTA Inject -->
-<script src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.0/webflow/pattern.com/scripts/content/toc.js" defer></script> <!-- TOC -->
+<!-- Pattern support assets served from GitHub release v1.0.1 through jsDelivr -->
+<script src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/media/video-popup.js"></script> <!-- Video Popup JS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/styles/pagination-fix.css"> <!-- Pagination Fix CSS -->
+<script src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/nav/v1-nav-desktop.js" defer></script> <!-- v1 Nav Desktop -->
+<script src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/nav/v1-nav-mobile.js" defer></script> <!-- v1 Nav Mobile -->
+<script src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/nav/v1-nav-mobile-block.js" defer></script> <!-- v1 Nav Mobile Block -->
+<script src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/content/logos.js" defer></script> <!-- Logos JS -->
+<script src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/content/rich-text-heading-conversion.js" defer></script> <!-- Rich Text Heading Conversion -->
+<script src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/schema/faq-schema-generator.js" defer></script> <!-- FAQ Schema Generator -->
+<script src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/interaction/accordion.js" defer></script> <!-- Accordion JS -->
+<script src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/interaction/lazy-load.js" defer></script> <!-- Lazy Load -->
+<script src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/content/cta-inject.js" defer></script> <!-- CTA Inject -->
+<script src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/content/toc.js" defer></script> <!-- TOC -->
+<script src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/media/iframe-popup.js" defer></script> <!-- Iframe Pop Up JS -->
+<script src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/interaction/pagination-fix.js" defer></script> <!-- Pagination Fix -->
+<script src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/interaction/card-load-animations-v10.js" defer></script> <!-- Card Load Animations v10 -->
 ```
 
 ## Existing Vendor Scripts To Keep
@@ -57,4 +60,7 @@ Keep consent-gated vendor scripts unchanged. Replace only the listed Flowdrive s
 - CTA injection.
 - TOC generation.
 - Video popup.
+- Iframe popup.
 - Pagination styling.
+- Pagination behavior.
+- Card load animations.

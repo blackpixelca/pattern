@@ -25,7 +25,7 @@ GitHub is the source of truth. Production should load pinned release assets thro
 Example:
 
 ```html
-<script defer src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.0/webflow/pattern.com/scripts/nav/v1-nav-desktop.js"></script>
+<script defer src="https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/nav/v1-nav-desktop.js"></script>
 ```
 
 Flowdrive URLs remain live until the jsDelivr replacements in `docs/WEBFLOW-FOOTER-CODE.md` are tested in Webflow.
