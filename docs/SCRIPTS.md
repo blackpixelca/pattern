@@ -2,7 +2,7 @@
 
 This manifest records the Flowdrive assets mirrored into GitHub on 2026-06-11. Flowdrive remains live until the pinned jsDelivr replacements are tested in Webflow.
 
-Use pinned release URLs for production. The URLs below assume the `v1.0.1` tag exists.
+Use pinned release URLs for production. Most URLs below use `v1.0.1`; the FAQ schema generator update should ship under the next release tag, `v1.0.3`.
 
 | Purpose | Original Flowdrive URL | Repo Path | Content Type | Defer | Bytes | SHA-256 | jsDelivr Replacement |
 | --- | --- | --- | --- | --- | ---: | --- | --- |
@@ -13,7 +13,7 @@ Use pinned release URLs for production. The URLs below assume the `v1.0.1` tag e
 | v1 Nav Mobile Block | `https://assets.pattern.com/W0w7w6PJoIzlpMudmlq2i` | `webflow/pattern.com/scripts/nav/v1-nav-mobile-block.js` | `text/javascript` | Yes | 1031 | `05ea4ebee568a3a68873e5b0e145476b2318e3b1cf50d0405eb945dc6efaced2` | `https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/nav/v1-nav-mobile-block.js` |
 | Logos JS | `https://assets.pattern.com/SZf3KV4WH2yZZTGS9mOmN` | `webflow/pattern.com/scripts/content/logos.js` | `text/javascript` | Yes | 10559 | `f7f70bd1575d4fdc321e00f3bdfb235beff493ea926d73b141ee82d7d5080da9` | `https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/content/logos.js` |
 | Rich Text Heading Conversion | `https://assets.pattern.com/P5y0audP3AzctdPeYDhBJ` | `webflow/pattern.com/scripts/content/rich-text-heading-conversion.js` | `text/javascript` | Yes | 954 | `3b50622e6ba6c1c54ffdfc253fa363cc71d7eb156fb625309677e6a0254573bb` | `https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/content/rich-text-heading-conversion.js` |
-| FAQ Schema Generator | `https://assets.pattern.com/Xt8XVeFJ8Hv5CsaoolALH` | `webflow/pattern.com/scripts/schema/faq-schema-generator.js` | `text/javascript` | Yes | 6179 | `677a0ab6c49d39cce53812afda16f89545589c37b0383e6f26238c817b2ae8fc` | `https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/schema/faq-schema-generator.js` |
+| FAQ Schema Generator | `https://assets.pattern.com/Xt8XVeFJ8Hv5CsaoolALH` | `webflow/pattern.com/scripts/schema/faq-schema-generator.js` | `text/javascript` | Yes | 9333 | `c7c390defc566c34d015db6eb095b2aa41aaec5358d2382b1599747836cb49a5` | `https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.3/webflow/pattern.com/scripts/schema/faq-schema-generator.js` |
 | Accordion JS | `https://assets.pattern.com/b0q8FMeP0vMqJ3T4CbN5X` | `webflow/pattern.com/scripts/interaction/accordion.js` | `text/javascript` | Yes | 6711 | `413f75b2c02bc323fd51a68ea0680b3f975d70f891d0152fa8301ba11af09bf8` | `https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/interaction/accordion.js` |
 | Lazy Load | `https://assets.pattern.com/rRfn3AXSX3QBf7Eq7PcLG` | `webflow/pattern.com/scripts/interaction/lazy-load.js` | `text/javascript` | Yes | 6783 | `7e5112d8d5768704ea7370e79465b8f341a5563fbc8e7036df19669dd952f5de` | `https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/interaction/lazy-load.js` |
 | CTA Inject | `https://assets.pattern.com/i4uIXiKNP9Y12qvAtov4u` | `webflow/pattern.com/scripts/content/cta-inject.js` | `text/javascript` | Yes | 5019 | `1217debbd5eea2c8c3940f1c7c899fcc348d331d1f79bf380c34a67a9ddca77f` | `https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/content/cta-inject.js` |
@@ -29,3 +29,15 @@ Keep vendor-managed scripts outside this repo unless Pattern owns the source.
 - Autopilot SDK: vendor-managed and Marketing-consent gated.
 - Splide: loaded from npm/jsDelivr with a pinned package version.
 - Storylane: vendor-managed and Analytics-consent gated.
+
+## UK Footer Support Assets
+
+Default UK footer dependencies to the US production scripts at `@v1.0.1`. Use `@v1.0.3` for the FAQ schema generator once that release is published. Add UK-specific paths only when the UK site needs different behavior; content differences should live in Webflow markup.
+
+| Purpose | Original UK URL | Repo Path | Content Type | Defer | Bytes | SHA-256 | jsDelivr Replacement |
+| --- | --- | --- | --- | --- | ---: | --- | --- |
+| UK Nav Desktop | US production shared nav | `webflow/pattern.com/scripts/nav/v1-nav-desktop.js` | `text/javascript` | Yes | 6249 | `2160e8ed6d21517a3d4ce7fbf7cec90db60e6502ee67371c60b701d58c732899` | `https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/nav/v1-nav-desktop.js` |
+| UK Nav Mobile | US production shared nav | `webflow/pattern.com/scripts/nav/v1-nav-mobile.js` | `text/javascript` | Yes | 9174 | `161c81595eaca68d55a7d2e8bf81b4c4756ad9402238ec6381b8cc75899f672b` | `https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/nav/v1-nav-mobile.js` |
+| UK Nav Mobile Block | US production shared nav | `webflow/pattern.com/scripts/nav/v1-nav-mobile-block.js` | `text/javascript` | Yes | 1031 | `05ea4ebee568a3a68873e5b0e145476b2318e3b1cf50d0405eb945dc6efaced2` | `https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/nav/v1-nav-mobile-block.js` |
+| UK Rich Text Heading Conversion | US production shared helper | `webflow/pattern.com/scripts/content/rich-text-heading-conversion.js` | `text/javascript` | Yes | 954 | `3b50622e6ba6c1c54ffdfc253fa363cc71d7eb156fb625309677e6a0254573bb` | `https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.1/webflow/pattern.com/scripts/content/rich-text-heading-conversion.js` |
+| UK FAQ Schema Generator | US production shared helper | `webflow/pattern.com/scripts/schema/faq-schema-generator.js` | `text/javascript` | Yes | 9333 | `c7c390defc566c34d015db6eb095b2aa41aaec5358d2382b1599747836cb49a5` | `https://cdn.jsdelivr.net/gh/blackpixelca/pattern@v1.0.3/webflow/pattern.com/scripts/schema/faq-schema-generator.js` |
