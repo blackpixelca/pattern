@@ -10,8 +10,6 @@ pageFunctions.addFunction('navMobile', function () {
     }
 
     function addActivationListener(el, handler) {
-      const activationEvent = window.PointerEvent ? 'pointerup' : 'click';
-
       if (!el.hasAttribute('role')) {
         el.setAttribute('role', 'button');
       }
@@ -19,7 +17,7 @@ pageFunctions.addFunction('navMobile', function () {
         el.setAttribute('tabindex', '0');
       }
 
-      addListener(el, activationEvent, handler);
+      addListener(el, 'click', handler);
       addListener(el, 'keydown', (e) => {
         if (e.key !== 'Enter' && e.key !== ' ') return;
         e.preventDefault();
@@ -101,9 +99,6 @@ pageFunctions.addFunction('navMobile', function () {
             }, '<');
 
           addActivationListener(link, (e) => {
-            if (e.cancelable) {
-              e.preventDefault();
-            }
             e.stopPropagation();
 
             const isOpen = linkStates.get(link);
