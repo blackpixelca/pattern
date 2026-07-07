@@ -9,7 +9,7 @@ pageFunctions.addFunction('navDesktop', function () {
     const desktopNavWrapper = document.querySelector('.nav_bottom');
 
     // ============================================
-    // TIMING â€” adjust these to control speed
+    // TIMING - adjust these to control speed
     // ============================================
     const OVERLAY_DURATION = 0.4;
     const DROPDOWN_DURATION = 0.4;
@@ -75,13 +75,15 @@ pageFunctions.addFunction('navDesktop', function () {
               duration: DROPDOWN_DURATION,
               ease: 'power2.out'
             })
-            .fromTo(linkLine, {
+          if (linkLine) {
+            desktopTl.fromTo(linkLine, {
               width: '0%'
             }, {
               width: '100%',
               duration: DROPDOWN_DURATION,
               ease: 'power2.out'
             }, '<');
+          }
 
           addListener(link, 'mouseenter', () => {
             if (desktopCurrentTimeline && desktopCurrentTimeline !== desktopTl) {
@@ -101,57 +103,6 @@ pageFunctions.addFunction('navDesktop', function () {
         if (desktopCurrentTimeline) {
           desktopCurrentTimeline.progress(0).pause();
           desktopCurrentTimeline = null;
-        }
-      });
-    }
-
-    // ============================================
-    // DROPDOWN MENU FUNCTIONALITY (navbar_wrap system - legacy)
-    // ============================================
-    const navWrapper = document.querySelector('.navbar_wrap');
-    if (navWrapper) {
-      const navLinks = document.querySelectorAll('.navbar_wrap [linkName]');
-      let currentTimeline = null;
-
-      navLinks.forEach(link => {
-        const linkValue = link.getAttribute('linkName');
-        const targetMenu = document.querySelector(`[menuName="${linkValue}"]`);
-        const linkLine = link.querySelector('.nav_link_line');
-
-        if (targetMenu) {
-          const tl = gsap.timeline({ paused: true });
-          timelines.push(tl);
-
-          tl.to(targetMenu, {
-            display: 'flex',
-            duration: DROPDOWN_DURATION,
-            opacity: 1,
-            ease: 'power2.out'
-          })
-            .to(linkLine, {
-              width: '80%',
-              duration: DROPDOWN_DURATION,
-              ease: 'power2.out'
-            }, '<');
-
-          addListener(link, 'mouseenter', () => {
-            if (currentTimeline && currentTimeline !== tl) {
-              currentTimeline.reverse();
-            }
-            currentTimeline = tl;
-            tl.play();
-          });
-
-          addListener(targetMenu, 'mouseenter', () => {
-            currentTimeline = tl;
-          });
-        }
-      });
-
-      addListener(navWrapper, 'mouseleave', () => {
-        if (currentTimeline) {
-          currentTimeline.reverse();
-          currentTimeline = null;
         }
       });
     }
@@ -185,7 +136,7 @@ pageFunctions.addFunction('navDesktop', function () {
         gsap.killTweensOf(menu);
         gsap.set(menu, { clearProps: 'all' });
       });
-      document.querySelectorAll('.nav_underline, .nav_link_line').forEach(line => {
+      document.querySelectorAll('.nav_underline').forEach(line => {
         gsap.set(line, { clearProps: 'width' });
       });
     };

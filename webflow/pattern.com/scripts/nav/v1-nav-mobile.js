@@ -9,6 +9,24 @@ pageFunctions.addFunction('navMobile', function () {
       listeners.push({ el, event, handler, options });
     }
 
+    function addActivationListener(el, handler) {
+      const activationEvent = window.PointerEvent ? 'pointerup' : 'click';
+
+      if (!el.hasAttribute('role')) {
+        el.setAttribute('role', 'button');
+      }
+      if (!el.hasAttribute('tabindex')) {
+        el.setAttribute('tabindex', '0');
+      }
+
+      addListener(el, activationEvent, handler);
+      addListener(el, 'keydown', (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();
+        handler(e);
+      });
+    }
+
     // ============================================
     // MOBILE DROPDOWN FUNCTIONALITY (nav_bottom system)
     // ============================================
@@ -40,6 +58,7 @@ pageFunctions.addFunction('navMobile', function () {
           currentOpenMenu = null;
         }
         if (currentOpenLink) {
+          currentOpenLink.setAttribute('aria-expanded', 'false');
           linkStates.set(currentOpenLink, false);
           currentOpenLink = null;
         }
@@ -52,6 +71,7 @@ pageFunctions.addFunction('navMobile', function () {
         const linkIcon = link.querySelector('.nav_link_icon');
 
         linkStates.set(link, false);
+        link.setAttribute('aria-expanded', 'false');
 
         if (targetMenu && targetPanel) {
           const mobileTl = gsap.timeline({ paused: true });
@@ -80,7 +100,10 @@ pageFunctions.addFunction('navMobile', function () {
               ease: 'power2.out'
             }, '<');
 
-          addListener(link, 'click', (e) => {
+          addActivationListener(link, (e) => {
+            if (e.cancelable) {
+              e.preventDefault();
+            }
             e.stopPropagation();
 
             const isOpen = linkStates.get(link);
@@ -105,6 +128,7 @@ pageFunctions.addFunction('navMobile', function () {
             currentOpenIcon = linkIcon;
             currentOpenMenu = targetMenu;
             linkStates.set(link, true);
+            link.setAttribute('aria-expanded', 'true');
             mobileTl.play();
           });
         }
@@ -125,133 +149,6 @@ pageFunctions.addFunction('navMobile', function () {
         const clickedLink = e.target.closest('[linkName]');
         if (!clickedLink && mobileCurrentTimeline) {
           closeCurrentDropdown();
-        }
-      });
-    }
-
-    // ============================================
-    // MOBILE NAVIGATION MENU (navbar_wrap system - legacy)
-    // ============================================
-    const burger = document.querySelector('.navbar_burger');
-    const navLinks = document.querySelector('.navbar_links');
-    const panelBkg = document.querySelector('.navbar_panel_bkg');
-    const navMenus = document.querySelectorAll('.navbar_menu');
-    const dropdownLinks = document.querySelectorAll('.navbar_wrap [linkName]');
-
-    if (burger && navLinks && panelBkg && navMenus.length > 0) {
-      let currentTimeline = null;
-
-      const tl = gsap.timeline({ paused: true });
-      timelines.push(tl);
-
-      gsap.set(navLinks, { display: 'none' });
-      gsap.set(panelBkg, { opacity: 0 });
-      gsap.set(navMenus, { x: '100%' });
-
-      tl.to(navLinks, {
-        display: 'flex',
-        opacity: 1,
-        duration: 0.3,
-        ease: 'power2.out'
-      });
-      tl.to(panelBkg, {
-        opacity: 1,
-        duration: 0.3,
-        ease: 'power2.out'
-      }, "<");
-
-      addListener(burger, 'click', () => {
-        if (tl.reversed() || tl.paused()) {
-          tl.play();
-        } else {
-          tl.reverse();
-
-          if (currentTimeline) {
-            currentTimeline.reverse();
-            currentTimeline = null;
-          }
-
-          gsap.to(navMenus, {
-            x: '100%',
-            duration: 0.3,
-            ease: 'power2.out'
-          });
-        }
-      });
-
-      let currentOpenDropdownLink = null;
-      const dropdownLinkStates = new Map();
-
-      const closeCurrentDropdownMenu = () => {
-        if (currentTimeline) {
-          currentTimeline.progress(0).pause();
-          currentTimeline = null;
-        }
-        if (currentOpenDropdownLink) {
-          const prevLinkValue = currentOpenDropdownLink.getAttribute('linkName');
-          const prevTargetMenu = document.querySelector(`[menuName="${prevLinkValue}"]`);
-          if (prevTargetMenu) {
-            gsap.set(prevTargetMenu, { x: '100%', opacity: 0 });
-          }
-          dropdownLinkStates.set(currentOpenDropdownLink, false);
-          currentOpenDropdownLink = null;
-        }
-      };
-
-      dropdownLinks.forEach(link => {
-        const linkValue = link.getAttribute('linkName');
-        const targetMenu = document.querySelector(`[menuName="${linkValue}"]`);
-
-        dropdownLinkStates.set(link, false);
-
-        if (targetMenu) {
-          const dropdownTl = gsap.timeline({ paused: true });
-          timelines.push(dropdownTl);
-
-          dropdownTl.to(targetMenu, {
-            x: '0%',
-            duration: 0.3,
-            opacity: 1,
-            ease: 'power2.out'
-          });
-          dropdownTl.to('.navbar_links', {
-            opacity: 0,
-            duration: 0.3,
-            ease: 'power2.out'
-          }, "<");
-
-          addListener(link, 'click', (e) => {
-            e.stopPropagation();
-
-            const isOpen = dropdownLinkStates.get(link);
-
-            if (isOpen && currentOpenDropdownLink === link) {
-              closeCurrentDropdownMenu();
-              return;
-            }
-
-            if (currentTimeline) {
-              if (currentTimeline !== dropdownTl) {
-                closeCurrentDropdownMenu();
-              } else {
-                currentTimeline.progress(0).pause();
-              }
-            }
-
-            dropdownTl.progress(0);
-
-            currentTimeline = dropdownTl;
-            currentOpenDropdownLink = link;
-            dropdownLinkStates.set(link, true);
-            dropdownTl.play();
-          });
-
-          const backButton = targetMenu.querySelector('.navbar_back');
-          if (backButton) {
-            addListener(backButton, 'click', () => {
-              closeCurrentDropdownMenu();
-            });
-          }
         }
       });
     }
@@ -282,13 +179,12 @@ pageFunctions.addFunction('navMobile', function () {
         gsap.set(icon, { clearProps: 'rotation' });
       });
 
-      // Clear legacy nav inline styles
-      const navLinks = document.querySelector('.navbar_links');
-      const panelBkg = document.querySelector('.navbar_panel_bkg');
-      const navMenus = document.querySelectorAll('.navbar_menu');
-      if (navLinks) gsap.set(navLinks, { clearProps: 'all' });
-      if (panelBkg) gsap.set(panelBkg, { clearProps: 'all' });
-      navMenus.forEach(menu => gsap.set(menu, { clearProps: 'all' }));
+      // Clear mobile nav accessibility attributes
+      document.querySelectorAll('.nav_bottom [linkName]').forEach(link => {
+        link.removeAttribute('role');
+        link.removeAttribute('tabindex');
+        link.removeAttribute('aria-expanded');
+      });
     };
   });
 });
