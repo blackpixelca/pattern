@@ -36,23 +36,19 @@
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transform: translate3d(0, -0.5rem, 0);
-    transition: opacity 400ms cubic-bezier(0.16, 1, 0.3, 1), transform 400ms cubic-bezier(0.16, 1, 0.3, 1),
-      visibility 0s linear 400ms;
-    will-change: opacity, transform;
+    transition: opacity 260ms cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 260ms;
+    will-change: opacity;
   }
 
   .nav_wrap [menuName].is-visible {
     display: flex;
     visibility: visible;
-    transition: opacity 400ms cubic-bezier(0.16, 1, 0.3, 1), transform 400ms cubic-bezier(0.16, 1, 0.3, 1),
-      visibility 0s linear 0s;
+    transition: opacity 260ms cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0s;
   }
 
   .nav_wrap [menuName].is-open {
     opacity: 1;
     pointer-events: auto;
-    transform: translate3d(0, 0, 0);
   }
 }
 
@@ -61,33 +57,24 @@
     display: none;
     height: auto;
     max-height: none;
-    grid-template-rows: 0fr;
     opacity: 0;
     overflow: hidden;
-    transition: grid-template-rows 400ms cubic-bezier(0.16, 1, 0.3, 1), opacity 240ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 260ms cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity;
   }
 
   .nav_wrap [menuDropdown].is-visible {
-    display: grid;
+    display: block;
   }
 
   .nav_wrap [menuDropdown].is-open {
-    grid-template-rows: 1fr;
     opacity: 1;
   }
 
   .nav_wrap [menuDropdown] > .nav_panel_contain {
-    min-height: 0;
-    overflow: hidden;
-    opacity: 0;
-    transform: translate3d(0, -1rem, 0);
-    transition: opacity 400ms cubic-bezier(0.16, 1, 0.3, 1), transform 400ms cubic-bezier(0.16, 1, 0.3, 1);
-    will-change: opacity, transform;
-  }
-
-  .nav_wrap [menuDropdown].is-open > .nav_panel_contain {
     opacity: 1;
-    transform: translate3d(0, 0, 0);
+    transform: none;
+    transition: none;
   }
 
   .nav_wrap .nav_link_icon {

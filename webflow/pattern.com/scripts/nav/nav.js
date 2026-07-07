@@ -3,7 +3,7 @@
 
   var NAV_INIT_ATTR = "data-pattern-nav-ready";
   var DESKTOP_QUERY = "(min-width: 992px)";
-  var NAV_TRANSITION_MS = 420;
+  var NAV_TRANSITION_MS = 300;
   var transitionTimers = new WeakMap();
 
   function ready(callback) {
@@ -289,7 +289,7 @@
       if (!item) return;
       if (currentItem && currentItem !== item) {
         setExpanded(currentItem.trigger, false);
-        hidePanel(currentItem.dropdown);
+        resetPanel(currentItem.dropdown);
       }
 
       currentItem = item;
