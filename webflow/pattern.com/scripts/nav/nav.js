@@ -3,6 +3,8 @@
 
   var NAV_INIT_ATTR = "data-pattern-nav-ready";
   var DESKTOP_QUERY = "(min-width: 992px)";
+  var NAV_TRANSITION_MS = 420;
+  var transitionTimers = new WeakMap();
 
   function ready(callback) {
     if (document.readyState === "loading") {
@@ -92,12 +94,55 @@
     };
   }
 
-  function clearDesktopState(nav, items) {
+  function clearTransitionTimer(element) {
+    if (!element) return;
+
+    var timer = transitionTimers.get(element);
+    if (timer) window.clearTimeout(timer);
+    transitionTimers.delete(element);
+  }
+
+  function showPanel(element) {
+    if (!element) return;
+
+    clearTransitionTimer(element);
+    element.classList.add("is-visible");
+
+    window.requestAnimationFrame(function () {
+      element.classList.add("is-open");
+    });
+  }
+
+  function hidePanel(element) {
+    if (!element) return;
+
+    clearTransitionTimer(element);
+    element.classList.remove("is-open");
+
+    transitionTimers.set(
+      element,
+      window.setTimeout(function () {
+        if (!element.classList.contains("is-open")) {
+          element.classList.remove("is-visible");
+        }
+        transitionTimers.delete(element);
+      }, NAV_TRANSITION_MS)
+    );
+  }
+
+  function resetPanel(element) {
+    if (!element) return;
+
+    clearTransitionTimer(element);
+    element.classList.remove("is-open", "is-visible");
+  }
+
+  function clearDesktopState(nav, items, immediate) {
     nav.classList.remove("is-desktop-nav-open", "is-nav-overlay-open");
 
     items.forEach(function (item) {
       setExpanded(item.trigger, false);
-      setClass(item.menu, "is-open", false);
+      immediate ? resetPanel(item.menu) : hidePanel(item.menu);
     });
   }
 
@@ -121,13 +166,13 @@
       if (!item) return;
       if (currentItem && currentItem !== item) {
         setExpanded(currentItem.trigger, false);
-        setClass(currentItem.menu, "is-open", false);
+        hidePanel(currentItem.menu);
       }
 
       currentItem = item;
       nav.classList.add("is-desktop-nav-open", "is-nav-overlay-open");
       setExpanded(item.trigger, true);
-      setClass(item.menu, "is-open", true);
+      showPanel(item.menu);
     }
 
     function closeAll() {
@@ -185,7 +230,8 @@
     );
 
     return function () {
-      closeAll();
+      currentItem = null;
+      clearDesktopState(nav, items, true);
       cleanups.forEach(function (cleanup) {
         cleanup();
       });
@@ -235,7 +281,7 @@
       currentItem = null;
       items.forEach(function (item) {
         setExpanded(item.trigger, false);
-        setClass(item.dropdown, "is-open", false);
+        hidePanel(item.dropdown);
       });
     }
 
@@ -243,12 +289,12 @@
       if (!item) return;
       if (currentItem && currentItem !== item) {
         setExpanded(currentItem.trigger, false);
-        setClass(currentItem.dropdown, "is-open", false);
+        hidePanel(currentItem.dropdown);
       }
 
       currentItem = item;
       setExpanded(item.trigger, true);
-      setClass(item.dropdown, "is-open", true);
+      showPanel(item.dropdown);
     }
 
     function toggleDropdown(item) {
@@ -340,7 +386,11 @@
     syncShellState();
 
     return function () {
-      closeDropdowns();
+      currentItem = null;
+      items.forEach(function (item) {
+        setExpanded(item.trigger, false);
+        resetPanel(item.dropdown);
+      });
       nav.classList.remove("is-mobile-nav-open", "is-nav-overlay-open");
       cleanups.forEach(function (cleanup) {
         cleanup();
