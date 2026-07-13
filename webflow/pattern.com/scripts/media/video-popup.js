@@ -103,6 +103,37 @@
     playButton.parentNode.animate(fadeInSteps, timing);
   }
 
+  function getPopupGroup(component) {
+    var attr = (component && component.getAttribute('fc-video-popup')) || '';
+    var match = attr.match(/^component(.*)$/);
+    return match ? match[1] : '';
+  }
+
+  function toArray(list) {
+    return Array.prototype.slice.call(list || []);
+  }
+
+  function getPopupSlug(element) {
+    if (!element || !element.getAttribute) return '';
+
+    return (
+      element.getAttribute('fc-video-popup-slug') ||
+      element.getAttribute('data-video-popup-slug') ||
+      ''
+    );
+  }
+
+  function getPopupScope(component) {
+    if (!component || !component.closest) return null;
+
+    return (
+      component.closest('[fc-video-popup-slug], [data-video-popup-slug]') ||
+      component.closest('.w-dyn-item') ||
+      component.closest('[role="listitem"]') ||
+      component.parentElement
+    );
+  }
+
   function normalizeEmbedUrl(src) {
     if (!src) return src;
 
@@ -154,6 +185,16 @@
     return null;
   }
 
+  function sizeEmbedToWrapper(element) {
+    if (!element) return;
+
+    element.setAttribute('width', '100%');
+    element.setAttribute('height', '100%');
+    element.style.width = '100%';
+    element.style.height = '100%';
+    element.style.display = 'block';
+  }
+
   function getEmbedInfo(component) {
     var iframe = component.querySelector('iframe');
     var src = getStoredVideoSrc(iframe);
@@ -199,10 +240,35 @@
 
   function findOpenButtons(component, group) {
     var g = group || '';
-    var sel = '[fc-video-popup="open' + g + '"]';
-    var list = document.querySelectorAll(sel);
-    if (list.length) return list;
-    return document.querySelectorAll('[fc-video-popup^="open"]');
+    if (g) return document.querySelectorAll('[fc-video-popup="open' + g + '"]');
+    if (
+      component.__fcVideoPopupOpenButtons &&
+      component.__fcVideoPopupOpenButtons.length
+    ) {
+      return component.__fcVideoPopupOpenButtons;
+    }
+    return document.querySelectorAll('[fc-video-popup="open"]');
+  }
+
+  function getScopedOpenButtons(component) {
+    var scope = getPopupScope(component);
+    if (!scope || !scope.querySelectorAll) return [];
+
+    var slug = getPopupSlug(scope) || getPopupSlug(component);
+    var buttons = toArray(scope.querySelectorAll('[fc-video-popup^="open"]'));
+
+    if (!slug) return buttons;
+
+    var slugButtons = buttons.filter(function (button) {
+      var buttonScope =
+        button.closest &&
+        button.closest('[fc-video-popup-slug], [data-video-popup-slug]');
+      var buttonSlug = getPopupSlug(button) || getPopupSlug(buttonScope);
+
+      return !buttonSlug || buttonSlug === slug;
+    });
+
+    return slugButtons.length ? slugButtons : buttons;
   }
 
   function findCloseButtons(component) {
@@ -225,7 +291,35 @@
     };
   }
 
+  function pausePageVideos(component) {
+    var pausedVideos = [];
+
+    document.querySelectorAll('video').forEach(function (video) {
+      if (video.paused) return;
+
+      pausedVideos.push(video);
+      video.pause();
+    });
+
+    component.__fcVideoPopupPausedVideos = pausedVideos;
+  }
+
+  function resumePageVideos(component) {
+    var pausedVideos = component.__fcVideoPopupPausedVideos || [];
+    component.__fcVideoPopupPausedVideos = [];
+
+    pausedVideos.forEach(function (video) {
+      if (!video.isConnected || !video.autoplay) return;
+
+      var playPromise = video.play();
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch(function () {});
+      }
+    });
+  }
+
   function openPopup(component, timing) {
+    pausePageVideos(component);
     component.style.display = 'flex';
     component.animate(videoPopupOpenSteps, timing);
     lockScroll();
@@ -236,6 +330,7 @@
     setTimeout(function () {
       component.style.display = 'none';
       unlockScroll();
+      resumePageVideos(component);
       if (typeof callback === 'function') callback();
     }, duration);
   }
@@ -269,12 +364,47 @@
     document.head.appendChild(script);
   }
 
+  var youtubeReadyCallbacks = [];
+
+  function flushYoutubeReadyCallbacks() {
+    var callbacks = youtubeReadyCallbacks.slice();
+    youtubeReadyCallbacks = [];
+
+    callbacks.forEach(function (callback) {
+      callback();
+    });
+  }
+
+  function ensureYoutubeApi(callback, errorCallback) {
+    if (typeof YT !== 'undefined' && YT.Player) {
+      callback();
+      return;
+    }
+
+    youtubeReadyCallbacks.push(callback);
+
+    window.onYouTubeIframeAPIReady = function () {
+      flushYoutubeReadyCallbacks();
+    };
+
+    loadScriptOnce(
+      'youtube-iframe-api',
+      'https://www.youtube.com/iframe_api',
+      function () {
+        if (typeof YT !== 'undefined' && YT.Player) {
+          flushYoutubeReadyCallbacks();
+        }
+      },
+      errorCallback
+    );
+  }
+
   function setupVimeoPopupLazy(component, info) {
     var iframe = info.iframe;
     var storedSrc = info.src;
     var category = getConsentCategory(component, iframe, 'vimeo');
 
-    var group = (component.getAttribute('fc-video-popup') || '').split('component')[1] || '';
+    var group = getPopupGroup(component);
     var openButtons = findOpenButtons(component, group);
     var closeButtons = findCloseButtons(component);
     var timingInfo = getTiming(component);
@@ -387,7 +517,7 @@
     var storedSrc = info.src;
     var category = getConsentCategory(component, iframe, 'youtube');
 
-    var group = (component.getAttribute('fc-video-popup') || '').split('component')[1] || '';
+    var group = getPopupGroup(component);
     var openButtons = findOpenButtons(component, group);
     var closeButtons = findCloseButtons(component);
     var timingInfo = getTiming(component);
@@ -416,15 +546,41 @@
           return;
         }
 
+        var originalClassName = iframe.className || '';
+        var originalAllow =
+          iframe.getAttribute('allow') ||
+          'autoplay; fullscreen; picture-in-picture';
+        var originalTitle =
+          iframe.getAttribute('title') ||
+          'YouTube video player';
         var container = document.createElement('div');
+        container.className = originalClassName;
+        sizeEmbedToWrapper(container);
         iframe.parentNode.replaceChild(container, iframe);
 
         player = new YT.Player(container, {
+          width: '100%',
+          height: '100%',
           videoId: videoId,
+          playerVars: {
+            playsinline: 1,
+            rel: 0
+          },
           events: {
             onReady: function (e) {
               var iframeEl = e.target.getIframe();
-              if (iframeEl) iframeEl.classList.add('iframe');
+              if (iframeEl) {
+                if (originalClassName) {
+                  iframeEl.className = originalClassName;
+                } else {
+                  iframeEl.classList.add('iframe');
+                }
+
+                iframeEl.setAttribute('allow', originalAllow);
+                iframeEl.setAttribute('allowfullscreen', '');
+                iframeEl.setAttribute('title', originalTitle);
+                sizeEmbedToWrapper(iframeEl);
+              }
 
               openPopup(component, timingInfo.timing);
 
@@ -467,16 +623,8 @@
         opening = true;
 
         whenConsented(category, function () {
-          window.onYouTubeIframeAPIReady = wirePlayerAndOpen;
-
-          loadScriptOnce(
-            'youtube-iframe-api',
-            'https://www.youtube.com/iframe_api',
-            function () {
-              if (typeof YT !== 'undefined' && YT.Player) {
-                wirePlayerAndOpen();
-              }
-            },
+          ensureYoutubeApi(
+            wirePlayerAndOpen,
             function () {
               opening = false;
               console.error('[video-popup] Failed to load YouTube API.');
@@ -514,6 +662,11 @@
 
     for (var i = 0; i < videoPopupComponents.length; i++) {
       var component = videoPopupComponents[i];
+      var group = getPopupGroup(component);
+
+      if (!group) {
+        component.__fcVideoPopupOpenButtons = getScopedOpenButtons(component);
+      }
 
       document.body.appendChild(component);
 
