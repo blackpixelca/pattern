@@ -117,9 +117,7 @@
     );
 
     if (!consentMarker) return '';
-    return (
-      consentMarker.getAttribute('fs-consent-categories') || 'personalization'
-    );
+    return (consentMarker.getAttribute('fs-consent-categories') || '').trim();
   }
 
   function runAfterConsent(category, callback) {
