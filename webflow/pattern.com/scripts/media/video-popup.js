@@ -111,13 +111,28 @@
     return api.consents;
   }
 
-  function runAfterConsent(category, callback) {
-    var consentPro = window.FinsweetConsentPro;
+  function getConsentCategory(root) {
+    var consentMarker = root.querySelector(
+      '.video_player_media [fs-consent-categories]'
+    );
 
-    // The Pattern Library intentionally runs without Consent Pro.
-    if (!consentPro) {
+    if (!consentMarker) return '';
+    return (
+      consentMarker.getAttribute('fs-consent-categories') || 'personalization'
+    );
+  }
+
+  function runAfterConsent(category, callback) {
+    if (!category) {
       callback();
       return;
+    }
+
+    var consentPro = window.FinsweetConsentPro;
+
+    if (!consentPro) {
+      consentPro = [];
+      window.FinsweetConsentPro = consentPro;
     }
 
     var completed = false;
@@ -212,6 +227,9 @@
       var sourceElement = root.querySelector('[data-video-player-source]');
       storedSource = makeSourceInert(sourceElement);
     }
+
+    var consentCategory = getConsentCategory(root);
+
     var opener = null;
     var closeTimer = null;
     var waitingForConsent = false;
@@ -307,12 +325,7 @@
       if (dialog.open || waitingForConsent) return;
       waitingForConsent = true;
 
-      var category =
-        dialog.getAttribute('data-consent-category') ||
-        (iframe && iframe.getAttribute('fs-consent-categories')) ||
-        'personalization';
-
-      runAfterConsent(category, function () {
+      runAfterConsent(consentCategory, function () {
         waitingForConsent = false;
         reveal();
       });
