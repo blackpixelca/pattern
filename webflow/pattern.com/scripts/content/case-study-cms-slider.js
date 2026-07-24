@@ -319,9 +319,10 @@
       return;
     }
 
-    instance.timeline = window.gsap.timeline({
-      defaults: { overwrite: true }
-    });
+    // The previous transition timeline is killed above, so child tweens do not
+    // need overwrite. Enabling it here causes the enter tween to cancel the
+    // exit tween and the initial hidden/y-offset state during construction.
+    instance.timeline = window.gsap.timeline();
 
     instance.timeline
       .to(motionElements, {
