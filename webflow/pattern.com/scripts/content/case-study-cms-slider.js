@@ -1,0 +1,486 @@
+(function () {
+  "use strict";
+
+  const ROOT_SELECTOR = "[data-case-study-slider]";
+  const ITEM_SELECTOR = ".w-dyn-item";
+  const COMPONENT_SELECTOR = ".case-study_slider_wrap";
+  const STYLE_ID = "pattern-case-study-slider-styles";
+
+  const SELECTORS = {
+    visual: ".case-study_slider_visual",
+    logo: ".case-study_slider_logo",
+    quote: ".case-study_slider_quote",
+    avatar: ".case-study_slider_avatar",
+    author: ".case-study_slider_name",
+    content: ".case-study_slider_content",
+    cta: ".u-button-wrapper",
+    link: ".clickable_link[href]",
+    stat: ".case-study_slider_stat",
+    statValue: ".card_stats_top .u-text",
+    statLabel: ".card_general_bottom .u-text",
+    controls: "[data-case-study-controls], .case-study_slider_controls",
+    previous: "[data-case-study-prev]",
+    next: "[data-case-study-next]"
+  };
+
+  const state = window.PatternCaseStudyCMS = window.PatternCaseStudyCMS || {};
+  if (!(state.instances instanceof WeakMap)) state.instances = new WeakMap();
+  if (!(state.initialized instanceof WeakSet)) state.initialized = new WeakSet();
+
+  function injectStyles() {
+    if (document.getElementById(STYLE_ID)) return;
+
+    const style = document.createElement("style");
+    style.id = STYLE_ID;
+    style.textContent = `
+      [data-case-study-slider-ready] .case-study_slider_visual {
+        overflow: hidden;
+      }
+
+      [data-case-study-slider-ready] .case-study_slider_image_swiper,
+      [data-case-study-slider-ready] .case-study_slider_image_list,
+      [data-case-study-slider-ready] .case-study_slider_image_slide,
+      [data-case-study-slider-ready] .case-study_slider_image_slide > .u-image-wrapper {
+        width: 100%;
+        height: 100%;
+      }
+
+      [data-case-study-slider-ready] .case-study_slider_image_slide {
+        overflow: hidden;
+      }
+
+      [data-case-study-slider-ready] .case-study_slider_controls[hidden],
+      [data-case-study-slider-static] .case-study_slider_controls {
+        display: none !important;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        [data-case-study-slider-ready] .swiper-wrapper {
+          transition-duration: 0ms !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function findSliderRoots(root) {
+    const scope = root || document;
+    const explicit = Array.from(scope.querySelectorAll(ROOT_SELECTOR));
+    if (explicit.length) return explicit;
+
+    return Array.from(scope.querySelectorAll(".w-dyn-list")).filter((list) => {
+      return Boolean(list.querySelector(`${ITEM_SELECTOR} ${COMPONENT_SELECTOR}`));
+    });
+  }
+
+  function getImageData(root) {
+    const image = root && root.querySelector("img");
+    if (!image) return null;
+
+    return {
+      src: image.getAttribute("src") || "",
+      srcset: image.getAttribute("srcset") || "",
+      sizes: image.getAttribute("sizes") || "",
+      alt: image.getAttribute("alt") || ""
+    };
+  }
+
+  function getText(root) {
+    return root ? root.textContent.trim() : "";
+  }
+
+  function setText(root, value) {
+    if (!root) return;
+
+    const textNode = root.querySelector("span") || root;
+    textNode.textContent = value || "";
+    root.classList.remove("w-dyn-bind-empty");
+  }
+
+  function setImage(root, data) {
+    const image = root && root.querySelector("img");
+    if (!image || !data || !data.src) return;
+
+    image.src = data.src;
+    image.alt = data.alt || "";
+    image.loading = "lazy";
+    image.decoding = "async";
+
+    if (data.srcset) image.setAttribute("srcset", data.srcset);
+    else image.removeAttribute("srcset");
+
+    if (data.sizes) image.setAttribute("sizes", data.sizes);
+    else image.removeAttribute("sizes");
+  }
+
+  function readStat(stat) {
+    return {
+      value: getText(stat.querySelector(SELECTORS.statValue)),
+      label: getText(stat.querySelector(SELECTORS.statLabel))
+    };
+  }
+
+  function readRecord(item) {
+    const component = item.querySelector(COMPONENT_SELECTOR);
+    if (!component) return null;
+
+    const visual = component.querySelector(SELECTORS.visual);
+    const imageWrapper = visual && visual.querySelector(".u-image-wrapper");
+    const author = component.querySelector(SELECTORS.author);
+    const authorLines = author ? Array.from(author.querySelectorAll(".u-text")) : [];
+    const link = component.querySelector(SELECTORS.link);
+
+    return {
+      imageWrapper: imageWrapper ? imageWrapper.cloneNode(true) : null,
+      logo: getImageData(component.querySelector(SELECTORS.logo)),
+      quote: getText(component.querySelector(SELECTORS.quote)),
+      avatar: getImageData(component.querySelector(SELECTORS.avatar)),
+      authorName: getText(authorLines[0]),
+      authorTitle: getText(authorLines[1]),
+      href: link ? link.getAttribute("href") || "#" : "#",
+      stats: Array.from(component.querySelectorAll(SELECTORS.stat)).map(readStat)
+    };
+  }
+
+  function collectRecords(root) {
+    return Array.from(root.querySelectorAll(`:scope > .w-dyn-items > ${ITEM_SELECTOR}, :scope > ${ITEM_SELECTOR}`))
+      .map(readRecord)
+      .filter((record) => record && record.imageWrapper);
+  }
+
+  function getItems(root) {
+    return Array.from(root.querySelectorAll(`:scope > .w-dyn-items > ${ITEM_SELECTOR}, :scope > ${ITEM_SELECTOR}`));
+  }
+
+  function getTarget(component) {
+    const author = component.querySelector(SELECTORS.author);
+    const authorLines = author ? Array.from(author.querySelectorAll(".u-text")) : [];
+    const stats = Array.from(component.querySelectorAll(SELECTORS.stat));
+
+    return {
+      component,
+      visual: component.querySelector(SELECTORS.visual),
+      content: component.querySelector(SELECTORS.content),
+      logo: component.querySelector(SELECTORS.logo),
+      quote: component.querySelector(SELECTORS.quote),
+      avatar: component.querySelector(SELECTORS.avatar),
+      author,
+      authorName: authorLines[0] || null,
+      authorTitle: authorLines[1] || null,
+      cta: component.querySelector(SELECTORS.cta),
+      link: component.querySelector(SELECTORS.link),
+      stats: stats.map((stat) => ({
+        root: stat,
+        value: stat.querySelector(SELECTORS.statValue),
+        label: stat.querySelector(SELECTORS.statLabel)
+      })),
+      controls: component.querySelector(SELECTORS.controls),
+      previous: component.querySelector(SELECTORS.previous),
+      next: component.querySelector(SELECTORS.next)
+    };
+  }
+
+  function buildImageSwiper(target, records) {
+    const viewport = document.createElement("div");
+    viewport.className = "case-study_slider_image_swiper swiper";
+    viewport.setAttribute("data-case-study-image-swiper", "");
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "case-study_slider_image_list swiper-wrapper";
+
+    records.forEach((record, index) => {
+      const slide = document.createElement("div");
+      slide.className = "case-study_slider_image_slide swiper-slide";
+      slide.setAttribute("role", "group");
+      slide.setAttribute("aria-label", `${index + 1} of ${records.length}`);
+      slide.appendChild(record.imageWrapper.cloneNode(true));
+      wrapper.appendChild(slide);
+    });
+
+    viewport.appendChild(wrapper);
+    target.visual.replaceChildren(viewport);
+    return viewport;
+  }
+
+  function parseNumber(rawValue) {
+    const raw = String(rawValue || "").trim();
+    const match = raw.match(/^(\D*?)([-+]?\d[\d,]*(?:\.\d+)?)(.*)$/);
+    if (!match) return null;
+
+    const token = match[2];
+    const explicitPlus = token.startsWith("+");
+    const unsignedToken = explicitPlus ? token.slice(1) : token;
+    const value = Number(unsignedToken.replace(/,/g, ""));
+    if (!Number.isFinite(value)) return null;
+
+    return {
+      raw,
+      prefix: `${match[1]}${explicitPlus ? "+" : ""}`,
+      suffix: match[3],
+      value,
+      decimals: (unsignedToken.split(".")[1] || "").length,
+      grouped: unsignedToken.includes(",")
+    };
+  }
+
+  function formatNumber(parts, value) {
+    const absoluteValue = Object.is(value, -0) ? 0 : value;
+    let formatted = absoluteValue.toFixed(parts.decimals);
+
+    if (parts.grouped) {
+      const pieces = formatted.split(".");
+      pieces[0] = Number(pieces[0]).toLocaleString("en-US");
+      formatted = pieces.join(".");
+    }
+
+    return `${parts.prefix}${formatted}${parts.suffix}`;
+  }
+
+  function tweenStat(element, fromRaw, toRaw, reduceMotion) {
+    if (!element) return;
+
+    const from = parseNumber(fromRaw);
+    const to = parseNumber(toRaw);
+    if (reduceMotion || !from || !to || !window.gsap) {
+      setText(element, toRaw);
+      return;
+    }
+
+    const textNode = element.querySelector("span") || element;
+    const proxy = { value: from.value };
+    window.gsap.killTweensOf(proxy);
+    window.gsap.to(proxy, {
+      value: to.value,
+      duration: 0.6,
+      ease: "power3.out",
+      overwrite: true,
+      onUpdate() {
+        textNode.textContent = formatNumber(to, proxy.value);
+      },
+      onComplete() {
+        textNode.textContent = to.raw;
+      }
+    });
+  }
+
+  function applyRecord(target, record) {
+    setImage(target.logo, record.logo);
+    setText(target.quote, record.quote);
+    setImage(target.avatar, record.avatar);
+    setText(target.authorName, record.authorName);
+    setText(target.authorTitle, record.authorTitle);
+
+    if (target.link) target.link.setAttribute("href", record.href || "#");
+
+    target.stats.forEach((stat, index) => {
+      const nextStat = record.stats[index] || {};
+      const hasContent = Boolean(nextStat.value || nextStat.label);
+      stat.root.hidden = !hasContent;
+      if (!hasContent) return;
+      setText(stat.label, nextStat.label);
+    });
+  }
+
+  function getMotionElements(target) {
+    return [
+      target.logo,
+      target.quote,
+      target.avatar,
+      target.author,
+      target.cta,
+      ...target.stats.map((stat) => stat.label)
+    ].filter(Boolean);
+  }
+
+  function transitionContent(instance, nextIndex) {
+    const { target, records, reduceMotion } = instance;
+    const previousRecord = records[instance.currentIndex];
+    const nextRecord = records[nextIndex];
+    if (!nextRecord || nextIndex === instance.currentIndex) return;
+
+    if (instance.timeline) instance.timeline.kill();
+
+    const motionElements = getMotionElements(target);
+    const update = () => {
+      applyRecord(target, nextRecord);
+
+      target.stats.forEach((stat, index) => {
+        const previousStat = previousRecord.stats[index] || {};
+        const nextStat = nextRecord.stats[index] || {};
+        tweenStat(stat.value, previousStat.value, nextStat.value, reduceMotion);
+      });
+
+      instance.currentIndex = nextIndex;
+    };
+
+    if (reduceMotion || !window.gsap) {
+      update();
+      return;
+    }
+
+    instance.timeline = window.gsap.timeline({
+      defaults: { overwrite: true }
+    });
+
+    instance.timeline
+      .to(motionElements, {
+        autoAlpha: 0,
+        y: -8,
+        duration: 0.16,
+        stagger: 0.02,
+        ease: "power1.in"
+      })
+      .call(update)
+      .set(motionElements, { y: 16 })
+      .to(motionElements, {
+        autoAlpha: 1,
+        y: 0,
+        duration: 0.42,
+        stagger: 0.05,
+        ease: "power3.out"
+      });
+  }
+
+  function setControlsBusy(target, busy) {
+    [target.previous, target.next].filter(Boolean).forEach((button) => {
+      button.disabled = busy;
+      button.setAttribute("aria-disabled", busy ? "true" : "false");
+    });
+
+    target.component.setAttribute("aria-busy", busy ? "true" : "false");
+  }
+
+  function hideSourceItems(items) {
+    items.slice(1).forEach((item) => {
+      item.hidden = true;
+      item.inert = true;
+      item.setAttribute("aria-hidden", "true");
+    });
+  }
+
+  function initializeStatic(root, component) {
+    root.setAttribute("data-case-study-slider-static", "");
+    root.removeAttribute("data-case-study-slider-ready");
+    root.removeAttribute("role");
+    root.removeAttribute("aria-roledescription");
+
+    const controls = component.querySelector(SELECTORS.controls);
+    if (controls) controls.hidden = true;
+  }
+
+  function initializeSlider(root) {
+    if (state.initialized.has(root)) return;
+
+    const items = getItems(root);
+    if (!items.length) return;
+
+    const component = items[0].querySelector(COMPONENT_SELECTOR);
+    if (!component) return;
+
+    const records = collectRecords(root);
+    if (records.length < 2) {
+      initializeStatic(root, component);
+      state.initialized.add(root);
+      return;
+    }
+
+    if (!window.Swiper) return;
+
+    const target = getTarget(component);
+    if (!target.visual || !target.content) return;
+
+    const viewport = buildImageSwiper(target, records);
+    const reduceMotion = window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    root.removeAttribute("data-case-study-slider-static");
+    root.setAttribute("data-case-study-slider-ready", "");
+    root.setAttribute("role", "region");
+    root.setAttribute("aria-roledescription", "carousel");
+    root.setAttribute("aria-label", root.getAttribute("aria-label") || "Case studies");
+    target.content.setAttribute("aria-live", "polite");
+    target.content.setAttribute("aria-atomic", "false");
+    if (target.controls) target.controls.hidden = false;
+
+    hideSourceItems(items);
+
+    const instance = {
+      root,
+      target,
+      records,
+      currentIndex: 0,
+      reduceMotion,
+      timeline: null,
+      swiper: null
+    };
+
+    const swiper = new window.Swiper(viewport, {
+      slidesPerView: 1,
+      speed: reduceMotion ? 0 : 700,
+      loop: true,
+      allowTouchMove: true,
+      preventInteractionOnTransition: true,
+      navigation: {
+        prevEl: target.previous,
+        nextEl: target.next
+      },
+      keyboard: {
+        enabled: true,
+        onlyInViewport: true
+      },
+      a11y: {
+        enabled: true,
+        prevSlideMessage: "Previous case study",
+        nextSlideMessage: "Next case study",
+        slideLabelMessage: "{{index}} / {{slidesLength}}"
+      },
+      on: {
+        slideChangeTransitionStart(swiperInstance) {
+          const nextIndex = swiperInstance.realIndex || 0;
+          if (nextIndex === instance.currentIndex) return;
+          setControlsBusy(target, true);
+          transitionContent(instance, nextIndex);
+        },
+        transitionEnd() {
+          setControlsBusy(target, false);
+        }
+      }
+    });
+
+    instance.swiper = swiper;
+    state.instances.set(root, instance);
+    state.initialized.add(root);
+  }
+
+  function init(root) {
+    injectStyles();
+    findSliderRoots(root).forEach(initializeSlider);
+  }
+
+  function boot() {
+    let attempts = 0;
+    const waitForSwiper = () => {
+      const roots = findSliderRoots(document);
+      const needsSwiper = roots.some((root) => getItems(root).length > 1);
+
+      if (!needsSwiper || window.Swiper) {
+        init(document);
+        return;
+      }
+
+      attempts += 1;
+      if (attempts < 100) window.setTimeout(waitForSwiper, 50);
+      else console.warn("[Case Study CMS] Swiper 8 was not available; the static CMS fallback remains visible.");
+    };
+
+    waitForSwiper();
+  }
+
+  state.init = init;
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot, { once: true });
+  } else {
+    boot();
+  }
+})();
