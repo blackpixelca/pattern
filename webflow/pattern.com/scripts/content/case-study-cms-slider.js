@@ -350,6 +350,20 @@
     target.component.setAttribute("aria-busy", busy ? "true" : "false");
   }
 
+  function prepareControl(control) {
+    if (!control || control.tagName === "BUTTON") return;
+
+    control.setAttribute("role", "button");
+    control.setAttribute("tabindex", "0");
+    control.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      if (control.getAttribute("aria-disabled") === "true") return;
+
+      event.preventDefault();
+      control.click();
+    });
+  }
+
   function hideSourceItems(items) {
     items.slice(1).forEach((item) => {
       item.hidden = true;
@@ -401,6 +415,8 @@
     target.content.setAttribute("aria-live", "polite");
     target.content.setAttribute("aria-atomic", "false");
     if (target.controls) target.controls.hidden = false;
+    prepareControl(target.previous);
+    prepareControl(target.next);
 
     hideSourceItems(items);
 
