@@ -286,7 +286,8 @@
       target.logo,
       target.quote,
       target.avatar,
-      target.author,
+      target.authorName,
+      target.authorTitle,
       target.cta,
       ...target.stats.map((stat) => stat.label)
     ].filter(Boolean);
@@ -331,12 +332,12 @@
         ease: "power1.in"
       })
       .call(update)
-      .set(motionElements, { y: 16 })
+      .set(motionElements, { autoAlpha: 0, y: 24 })
       .to(motionElements, {
         autoAlpha: 1,
         y: 0,
-        duration: 0.42,
-        stagger: 0.05,
+        duration: 0.5,
+        stagger: 0.08,
         ease: "power3.out"
       });
   }
