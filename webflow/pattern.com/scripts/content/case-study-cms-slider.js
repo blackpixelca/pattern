@@ -65,10 +65,17 @@
 
   function findSliderRoots(root) {
     const scope = root || document;
-    const explicit = Array.from(scope.querySelectorAll(ROOT_SELECTOR));
+    const explicit = [];
+
+    if (scope.matches && scope.matches(ROOT_SELECTOR)) explicit.push(scope);
+    explicit.push(...Array.from(scope.querySelectorAll(ROOT_SELECTOR)));
     if (explicit.length) return explicit;
 
-    return Array.from(scope.querySelectorAll(".w-dyn-list")).filter((list) => {
+    const dynamicLists = [];
+    if (scope.matches && scope.matches(".w-dyn-list")) dynamicLists.push(scope);
+    dynamicLists.push(...Array.from(scope.querySelectorAll(".w-dyn-list")));
+
+    return dynamicLists.filter((list) => {
       return Boolean(list.querySelector(`${ITEM_SELECTOR} ${COMPONENT_SELECTOR}`));
     });
   }
@@ -405,6 +412,9 @@
     const target = getTarget(component);
     if (!target.visual || !target.content) return;
 
+    const originalVisualChildren = Array.from(target.visual.childNodes).map((node) =>
+      node.cloneNode(true)
+    );
     const viewport = buildImageSwiper(target, records);
     const reduceMotion = window.matchMedia &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -429,7 +439,8 @@
       currentIndex: 0,
       reduceMotion,
       timeline: null,
-      swiper: null
+      swiper: null,
+      originalVisualChildren
     };
 
     const swiper = new window.Swiper(viewport, {
@@ -475,6 +486,41 @@
     findSliderRoots(root).forEach(initializeSlider);
   }
 
+  function destroy(root) {
+    findSliderRoots(root).forEach((sliderRoot) => {
+      const instance = state.instances.get(sliderRoot);
+
+      if (instance) {
+        instance.timeline?.kill();
+        instance.swiper?.destroy(true, true);
+
+        if (instance.target.visual && instance.originalVisualChildren) {
+          instance.target.visual.replaceChildren(
+            ...instance.originalVisualChildren.map((node) => node.cloneNode(true))
+          );
+        }
+
+        instance.target.content?.removeAttribute("aria-live");
+        instance.target.content?.removeAttribute("aria-atomic");
+        if (instance.target.controls) instance.target.controls.hidden = true;
+        state.instances.delete(sliderRoot);
+      }
+
+      getItems(sliderRoot).forEach((item) => {
+        item.hidden = false;
+        item.inert = false;
+        item.removeAttribute("aria-hidden");
+      });
+
+      sliderRoot.removeAttribute("data-case-study-slider-ready");
+      sliderRoot.removeAttribute("data-case-study-slider-static");
+      sliderRoot.removeAttribute("role");
+      sliderRoot.removeAttribute("aria-roledescription");
+      sliderRoot.removeAttribute("aria-busy");
+      state.initialized.delete(sliderRoot);
+    });
+  }
+
   function boot() {
     let attempts = 0;
     const waitForSwiper = () => {
@@ -495,6 +541,7 @@
   }
 
   state.init = init;
+  state.destroy = destroy;
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot, { once: true });
