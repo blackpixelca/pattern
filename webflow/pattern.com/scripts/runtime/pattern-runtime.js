@@ -2,8 +2,9 @@
   'use strict';
 
   const GLOBAL_NAME = 'PatternRuntime';
-  const VERSION = '0.1.0';
+  const VERSION = '0.1.1';
   const EVENT_PREFIX = 'pattern:runtime';
+  const DYNAMIC_YEAR_SELECTOR = '[data-dynamic-year]';
   const currentScript = document.currentScript;
   const existingRuntime = window[GLOBAL_NAME];
 
@@ -72,6 +73,23 @@
     if (!scope || !selector) return false;
     if (scope.nodeType === Node.ELEMENT_NODE && scope.matches?.(selector)) return true;
     return Boolean(scope.querySelector?.(selector));
+  };
+
+  const updateDynamicYears = (scope = document) => {
+    const year = String(new Date().getFullYear());
+    const elements = [];
+
+    if (scope.nodeType === Node.ELEMENT_NODE && scope.matches?.(DYNAMIC_YEAR_SELECTOR)) {
+      elements.push(scope);
+    }
+
+    scope.querySelectorAll?.(DYNAMIC_YEAR_SELECTOR).forEach((element) => {
+      elements.push(element);
+    });
+
+    elements.forEach((element) => {
+      if (element.textContent !== year) element.textContent = year;
+    });
   };
 
   const setAssetAttributes = (element, options = {}) => {
@@ -436,6 +454,14 @@
   });
 
   if (!config.disableDefaults) {
+    register({
+      id: 'dynamic-year',
+      selector: DYNAMIC_YEAR_SELECTOR,
+      api: {
+        init: updateDynamicYears,
+      },
+    });
+
     register({
       id: 'marquee',
       selector: '[data-marquee]',
