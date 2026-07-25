@@ -1,146 +1,239 @@
-document.addEventListener("DOMContentLoaded", function () {
-  document.querySelectorAll(".pattern-library-v2--accordion_wrap").forEach((component, listIndex) => {
-    if (component.dataset.scriptInitialized) return;
-    component.dataset.scriptInitialized = "true";
+(() => {
+  const selectors = {
+    wrap: '[data-accordion], [class*="accordion_wrap"]',
+    list: '[data-accordion-list], [class*="accordion_list"]',
+    card: '[data-accordion-item], [class*="accordion_component"]',
+    button: '[data-accordion-trigger], [class*="accordion_toggle_button"]',
+    heading: '[class*="accordion_toggle_heading"]',
+    contentWrap: '[data-accordion-panel], [class*="accordion_content_wrap"]',
+    content: '[class*="accordion_content"]',
+    buttonBar: '[class*="u-btn-bar"][class*="cc-vertical"]',
+    buttonWrap: '[class*="accordion_toggle_btn_wrap"]',
+  };
 
-    const closePrevious = component.getAttribute("data-close-previous") !== "false";
-    const closeOnSecondClick = component.getAttribute("data-close-on-second-click") !== "false";
-    const openOnHover = component.getAttribute("data-open-on-hover") === "true";
-    const openByDefault = component.getAttribute("data-open-by-default") !== null && !isNaN(+component.getAttribute("data-open-by-default")) ? +component.getAttribute("data-open-by-default") : false;
-    const list = component.querySelector(".pattern-library-v2--accordion_list");
-    let previousIndex = null,
-      closeFunctions = [];
+  const legacyActiveClass = 'pattern-library-v2--is-active';
 
-    function flattenDisplayContents(slot) {
-      if (!slot) return;
-      let child = slot.firstElementChild;
-      while (child && child.classList.contains("u-display-contents")) {
-        while (child.firstChild) {
-          slot.insertBefore(child.firstChild, child);
-        }
-        slot.removeChild(child);
-        child = slot.firstElementChild;
+  const hasClassFragment = (element, fragment) =>
+    Boolean(element && [...element.classList].some((className) => className.includes(fragment)));
+
+  const isActive = (card) =>
+    card.classList.contains('is-active') || card.classList.contains(legacyActiveClass);
+
+  const setActive = (card, active) => {
+    card.classList.toggle('is-active', active);
+
+    if (card.hasAttribute('data-accordion-item')) {
+      card.classList.remove(legacyActiveClass);
+    } else {
+      card.classList.toggle(legacyActiveClass, active);
+    }
+  };
+
+  const getBooleanAttribute = (element, name, fallback) => {
+    const value = element.getAttribute(name);
+    if (value === null) return fallback;
+    return value !== 'false';
+  };
+
+  function initAccordions() {
+    document.querySelectorAll(selectors.wrap).forEach((component) => {
+      if (component.dataset.accordionInitialized === 'true') return;
+
+      const list = component.querySelector(selectors.list);
+      if (!list) {
+        console.warn('Accordion list not found:', component);
+        return;
       }
-    }
-    flattenDisplayContents(list);
+      if (typeof gsap === 'undefined') {
+        console.warn('GSAP is required for accordions:', component);
+        return;
+      }
 
-    function removeCMSList(slot) {
-      const dynList = Array.from(slot.children).find((child) => child.classList.contains("w-dyn-list"));
-      if (!dynList) return;
-      const nestedItems = dynList?.querySelector(".w-dyn-items")?.children;
-      if (!nestedItems) return;
-      const staticWrapper = [...slot.children];
-      [...nestedItems].forEach(el => { const c = [...el.children].find(c => !c.classList.contains('w-condition-invisible')); c && slot.appendChild(c); });
-      staticWrapper.forEach((el) => el.remove());
-    }
-    removeCMSList(list);
+      component.dataset.accordionInitialized = 'true';
+      component.dataset.scriptInitialized = 'true';
 
-    component.querySelectorAll(".pattern-library-v2--accordion_component").forEach((card, cardIndex) => {
-      // Try to find button - check for both button and heading variants
-      let button = card.querySelector(".pattern-library-v2--accordion_toggle_button");
-      if (!button) {
-        const heading = card.querySelector(".pattern-library-v2--accordion_toggle_heading");
-        if (heading) {
-          // If heading exists, use it as the button (make it clickable)
-          button = heading;
-          if (heading.tagName !== "BUTTON") {
-            heading.style.cursor = "pointer";
-            heading.setAttribute("role", "button");
-            heading.setAttribute("tabindex", "0");
+      const accordionUid = (window.__patternAccordionUid =
+        (window.__patternAccordionUid || 0) + 1);
+      const closePrevious = getBooleanAttribute(component, 'data-close-previous', true);
+      const closeOnSecondClick = getBooleanAttribute(
+        component,
+        'data-close-on-second-click',
+        true,
+      );
+      const openOnHover = getBooleanAttribute(component, 'data-open-on-hover', false);
+      const openByDefaultValue = component.getAttribute('data-open-by-default');
+      const openByDefault =
+        openByDefaultValue !== null && !Number.isNaN(Number(openByDefaultValue))
+          ? Number(openByDefaultValue)
+          : 0;
+      let previousIndex = null;
+      const closeFunctions = [];
+
+      function flattenDisplayContents(slot) {
+        let child = slot.firstElementChild;
+        while (child && hasClassFragment(child, 'u-display-contents')) {
+          while (child.firstChild) slot.insertBefore(child.firstChild, child);
+          child.remove();
+          child = slot.firstElementChild;
+        }
+      }
+
+      function removeCMSList(slot) {
+        const dynList = [...slot.children].find((child) => child.classList.contains('w-dyn-list'));
+        if (!dynList) return;
+
+        const nestedItems = dynList.querySelector('.w-dyn-items')?.children;
+        if (!nestedItems) return;
+
+        const staticWrapper = [...slot.children];
+        [...nestedItems].forEach((item) => {
+          const visibleChild = [...item.children].find(
+            (child) => !child.classList.contains('w-condition-invisible'),
+          );
+          if (visibleChild) slot.appendChild(visibleChild);
+        });
+        staticWrapper.forEach((element) => element.remove());
+      }
+
+      flattenDisplayContents(list);
+      removeCMSList(list);
+
+      const cards = [...list.querySelectorAll(selectors.card)].filter(
+        (card) => card.closest(selectors.wrap) === component,
+      );
+
+      cards.forEach((card, cardIndex) => {
+        let button = card.querySelector(selectors.button);
+        if (!button) {
+          const heading = card.querySelector(selectors.heading);
+          if (heading) {
+            button = heading;
+            if (heading.tagName !== 'BUTTON') {
+              heading.style.cursor = 'pointer';
+              heading.setAttribute('role', 'button');
+              heading.setAttribute('tabindex', '0');
+            }
           }
         }
-      }
 
-      // Try to find content wrapper - check multiple possible class names
-      let content = card.querySelector(".pattern-library-v2--accordion_content_wrap");
-      if (!content) {
-        content = card.querySelector(".pattern-library-v2--accordion_content");
-      }
-      if (!content) {
-        // Look for any element that might be the content (after the heading/button)
-        const headingOrButton = card.querySelector(".pattern-library-v2--accordion_toggle_heading, .pattern-library-v2--accordion_toggle_button");
-        if (headingOrButton) {
-          let nextSibling = headingOrButton.nextElementSibling;
-          while (nextSibling && nextSibling.classList.contains("u-display-contents")) {
+        let content = card.querySelector(selectors.contentWrap);
+        if (!content) content = card.querySelector(selectors.content);
+        if (!content) {
+          const headingOrButton = card.querySelector(`${selectors.heading}, ${selectors.button}`);
+          let nextSibling = headingOrButton?.nextElementSibling;
+          while (nextSibling && hasClassFragment(nextSibling, 'u-display-contents')) {
             nextSibling = nextSibling.nextElementSibling;
           }
           if (nextSibling) content = nextSibling;
         }
-      }
 
-      if (!button || !content) return console.warn("Missing elements:", card);
+        if (!button || !content) {
+          console.warn('Accordion is missing a button or content element:', card);
+          return;
+        }
 
-      // Find .u-btn-bar.cc-vertical elements within the card
-      const btnBars = card.querySelectorAll(".pattern-library-v2--u-btn-bar.pattern-library-v2--cc-vertical");
+        const buttonBars = card.querySelectorAll(selectors.buttonBar);
+        const buttonWraps = card.querySelectorAll(selectors.buttonWrap);
+        const buttonId = `accordion-trigger-${accordionUid}-${cardIndex}`;
+        const contentId = `accordion-panel-${accordionUid}-${cardIndex}`;
 
-      // Find .accordion_toggle_btn_wrap elements within the card
-      const btnWraps = card.querySelectorAll(".pattern-library-v2--accordion_toggle_btn_wrap");
+        setActive(card, false);
+        button.setAttribute('aria-expanded', 'false');
+        button.id = buttonId;
+        content.id = contentId;
+        button.setAttribute('aria-controls', contentId);
+        content.setAttribute('aria-labelledby', buttonId);
+        content.style.display = 'none';
+        content.style.height = '0px';
 
-      button.setAttribute("aria-expanded", "false");
-      button.setAttribute("id", "accordion_button_" + listIndex + "_" + cardIndex);
-      content.setAttribute("id", "accordion_content_" + listIndex + "_" + cardIndex);
-      button.setAttribute("aria-controls", content.id);
-      content.setAttribute("aria-labelledby", button.id);
-      content.style.display = "none";
+        const refresh = () => {
+          timeline.invalidate();
+          if (typeof ScrollTrigger !== 'undefined') ScrollTrigger.refresh();
+        };
 
-      const refresh = () => {
-        tl.invalidate();
-        if (typeof ScrollTrigger !== "undefined") ScrollTrigger.refresh();
-      };
-      const tl = gsap.timeline({ paused: true, defaults: { duration: 0.3, ease: "power1.inOut" }, onComplete: refresh, onReverseComplete: refresh });
-      tl.set(content, { display: "block" });
-      tl.fromTo(content, { height: 0 }, { height: "auto" });
+        const timeline = gsap.timeline({
+          paused: true,
+          defaults: { duration: 0.3, ease: 'power1.inOut' },
+          onComplete: () => {
+            content.style.height = 'auto';
+            refresh();
+          },
+          onReverseComplete: () => {
+            content.style.display = 'none';
+            content.style.height = '0px';
+            refresh();
+          },
+        });
+        timeline.fromTo(content, { height: 0 }, { height: 'auto' });
 
-      const closeAccordion = () => {
-        if (card.classList.contains("pattern-library-v2--is-active")) {
-          card.classList.remove("pattern-library-v2--is-active");
-          tl.reverse();
-          button.setAttribute("aria-expanded", "false");
-          // Show .u-btn-bar.cc-vertical elements when closing
-          btnBars.forEach(bar => {
-            bar.style.opacity = "";
-            bar.style.display = "";
+        const closeAccordion = () => {
+          if (!isActive(card)) return;
+
+          setActive(card, false);
+          button.setAttribute('aria-expanded', 'false');
+          timeline.reverse();
+          buttonBars.forEach((bar) => {
+            bar.style.opacity = '';
+            bar.style.display = '';
           });
-          // Re-enable hover state for .accordion_toggle_btn_wrap when closing
-          btnWraps.forEach(wrap => {
-            wrap.style.pointerEvents = "";
+          buttonWraps.forEach((wrap) => {
+            wrap.style.pointerEvents = '';
+          });
+        };
+        closeFunctions[cardIndex] = closeAccordion;
+
+        const openAccordion = (instant = false) => {
+          if (closePrevious && previousIndex !== null && previousIndex !== cardIndex) {
+            closeFunctions[previousIndex]?.();
+          }
+
+          previousIndex = cardIndex;
+          content.style.display = 'block';
+          button.setAttribute('aria-expanded', 'true');
+          setActive(card, true);
+          buttonBars.forEach((bar) => {
+            bar.style.opacity = '0';
+          });
+          buttonWraps.forEach((wrap) => {
+            wrap.style.pointerEvents = 'none';
+          });
+
+          if (instant) {
+            timeline.progress(1);
+            content.style.height = 'auto';
+          } else {
+            timeline.play();
+          }
+        };
+
+        const handleToggle = () => {
+          if (isActive(card) && closeOnSecondClick) {
+            closeAccordion();
+            previousIndex = null;
+          } else if (!isActive(card)) {
+            openAccordion();
+          }
+        };
+
+        button.addEventListener('click', handleToggle);
+        if (button.tagName !== 'BUTTON') {
+          button.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              handleToggle();
+            }
           });
         }
-      };
-      closeFunctions[cardIndex] = closeAccordion;
+        if (openOnHover) button.addEventListener('mouseenter', () => openAccordion());
 
-      const openAccordion = (instant = false) => {
-        if (closePrevious && previousIndex !== null && previousIndex !== cardIndex) closeFunctions[previousIndex]?.();
-        previousIndex = cardIndex;
-        button.setAttribute("aria-expanded", "true");
-        card.classList.add("pattern-library-v2--is-active");
-        // Hide .u-btn-bar.cc-vertical elements when opening
-        btnBars.forEach(bar => {
-          bar.style.opacity = "0";
-        });
-        // Disable hover state for .accordion_toggle_btn_wrap when opening
-        btnWraps.forEach(wrap => {
-          wrap.style.pointerEvents = "none";
-        });
-        instant ? tl.progress(1) : tl.play();
-      };
-      if (openByDefault === cardIndex + 1) openAccordion(true);
-
-      const handleToggle = () => (card.classList.contains("pattern-library-v2--is-active") && closeOnSecondClick ? (closeAccordion(), (previousIndex = null)) : openAccordion());
-
-      button.addEventListener("click", handleToggle);
-
-      // Add keyboard support if heading is used as button
-      if (button.classList.contains("pattern-library-v2--accordion_toggle_heading")) {
-        button.addEventListener("keydown", (e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            handleToggle();
-          }
-        });
-      }
-
-      if (openOnHover) button.addEventListener("mouseenter", () => openAccordion());
+        if (openByDefault === cardIndex + 1) openAccordion(true);
+      });
     });
-  });
-});
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAccordions, { once: true });
+  } else {
+    initAccordions();
+  }
+})();
