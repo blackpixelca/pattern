@@ -32,7 +32,7 @@
   const getBooleanAttribute = (element, name, fallback) => {
     const value = element.getAttribute(name);
     if (value === null) return fallback;
-    return value !== 'false';
+    return value.trim().toLowerCase() !== 'false';
   };
 
   function initAccordions() {
