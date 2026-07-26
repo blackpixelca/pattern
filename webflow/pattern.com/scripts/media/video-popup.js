@@ -2,7 +2,7 @@
  * Video Player popup
  *
  * Required structure per component instance:
- * - .video_player_wrap
+ * - [class*="video_player_wrap"]
  * - [data-video-player-open]
  * - dialog[data-video-player-dialog]
  * - iframe[data-video-src] (data-consent-src is supported during migration)
@@ -13,7 +13,7 @@
 
   var GLOBAL_NAME = 'PatternVideoPopup';
   var VERSION = '1.1.0';
-  var ROOT_SELECTOR = '.video_player_wrap';
+  var ROOT_SELECTOR = '[class*="video_player_wrap"]';
   var OPEN_SELECTOR = '[data-video-player-open]';
   var DIALOG_SELECTOR = 'dialog[data-video-player-dialog]';
   var CLOSE_SELECTOR = '[data-video-player-close]';
