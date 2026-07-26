@@ -3,22 +3,22 @@
 
   const ROOT_SELECTOR = "[data-case-study-slider]";
   const ITEM_SELECTOR = ".w-dyn-item";
-  const COMPONENT_SELECTOR = ".case-study_slider_wrap";
+  const COMPONENT_SELECTOR = '[class*="case-study_slider_wrap"]';
   const STYLE_ID = "pattern-case-study-slider-styles";
 
   const SELECTORS = {
-    visual: ".case-study_slider_visual",
-    logo: ".case-study_slider_logo",
-    quote: ".case-study_slider_quote",
-    avatar: ".case-study_slider_avatar",
-    author: ".case-study_slider_name",
-    content: ".case-study_slider_content",
-    cta: ".u-button-wrapper",
-    link: ".clickable_link[href]",
-    stat: ".case-study_slider_stat",
-    statValue: ".card_stats_top .u-text",
-    statLabel: ".card_general_bottom .u-text",
-    controls: "[data-case-study-controls], .case-study_slider_controls",
+    visual: '[class*="case-study_slider_visual"]',
+    logo: '[class*="case-study_slider_logo"]',
+    quote: '[class*="case-study_slider_quote"]',
+    avatar: '[class*="case-study_slider_avatar"]',
+    author: '[class*="case-study_slider_name"]',
+    content: '[class*="case-study_slider_content"]',
+    cta: '[class*="u-button-wrapper"]',
+    link: '[class*="clickable_link"][href]',
+    stat: '[class*="case-study_slider_stat"]',
+    statValue: '[class*="card_stats_top"] [class*="u-text"]',
+    statLabel: '[class*="card_general_bottom"] [class*="u-text"]',
+    controls: '[data-case-study-controls], [class*="case-study_slider_controls"]',
     previous: "[data-case-study-prev]",
     next: "[data-case-study-next]"
   };
@@ -33,14 +33,14 @@
     const style = document.createElement("style");
     style.id = STYLE_ID;
     style.textContent = `
-      [data-case-study-slider-ready] .case-study_slider_visual {
+      [data-case-study-slider-ready] [class*="case-study_slider_visual"] {
         overflow: hidden;
       }
 
       [data-case-study-slider-ready] .case-study_slider_image_swiper,
       [data-case-study-slider-ready] .case-study_slider_image_list,
       [data-case-study-slider-ready] .case-study_slider_image_slide,
-      [data-case-study-slider-ready] .case-study_slider_image_slide > .u-image-wrapper {
+      [data-case-study-slider-ready] .case-study_slider_image_slide > [class*="u-image-wrapper"] {
         width: 100%;
         height: 100%;
       }
@@ -49,8 +49,8 @@
         overflow: hidden;
       }
 
-      [data-case-study-slider-ready] .case-study_slider_controls[hidden],
-      [data-case-study-slider-static] .case-study_slider_controls {
+      [data-case-study-slider-ready] [class*="case-study_slider_controls"][hidden],
+      [data-case-study-slider-static] [class*="case-study_slider_controls"] {
         display: none !important;
       }
 
@@ -132,9 +132,9 @@
     if (!component) return null;
 
     const visual = component.querySelector(SELECTORS.visual);
-    const imageWrapper = visual && visual.querySelector(".u-image-wrapper");
+    const imageWrapper = visual && visual.querySelector('[class*="u-image-wrapper"]');
     const author = component.querySelector(SELECTORS.author);
-    const authorLines = author ? Array.from(author.querySelectorAll(".u-text")) : [];
+    const authorLines = author ? Array.from(author.querySelectorAll('[class*="u-text"]')) : [];
     const link = component.querySelector(SELECTORS.link);
 
     return {
@@ -161,7 +161,7 @@
 
   function getTarget(component) {
     const author = component.querySelector(SELECTORS.author);
-    const authorLines = author ? Array.from(author.querySelectorAll(".u-text")) : [];
+    const authorLines = author ? Array.from(author.querySelectorAll('[class*="u-text"]')) : [];
     const stats = Array.from(component.querySelectorAll(SELECTORS.stat));
 
     return {
