@@ -2,7 +2,7 @@
   'use strict';
 
   const GLOBAL_NAME = 'PatternRuntime';
-  const VERSION = '0.1.1';
+  const VERSION = '0.2.0';
   const EVENT_PREFIX = 'pattern:runtime';
   const DYNAMIC_YEAR_SELECTOR = '[data-dynamic-year]';
   const currentScript = document.currentScript;
@@ -362,7 +362,7 @@
       records.forEach((record) => {
         record.addedNodes.forEach(queueScan);
         record.removedNodes.forEach((node) => {
-          if (node.nodeType !== Node.ELEMENT_NODE) return;
+          if (node.nodeType !== Node.ELEMENT_NODE || node.isConnected) return;
           modules.forEach((definition) => {
             if (hasMatch(node, definition.selector)) cleanupModule(definition, node);
           });
@@ -474,6 +474,27 @@
         {
           src: '../../styles/marquee.css',
           integrity: 'sha384-AmEK1fi+66pyjxnbxtHuCV0BHx0uBH5U2fBj8aFVKE8ut+PH6qVBGom9170D2Wbn',
+        },
+      ],
+    });
+
+    register({
+      id: 'home-anchor-nav',
+      selector: [
+        '[data-home-anchor-nav]',
+        '[class~="home_anchor_nav"]',
+        '[class*="--home_anchor_nav "]',
+        '[class$="--home_anchor_nav"]',
+      ].join(','),
+      global: 'PatternHomeAnchorNav',
+      script: {
+        src: '../nav/home-anchor-nav.js',
+        integrity: 'sha384-N+zkGeyVjcSRZYMUGUINy5NRlwu3B/GC/THABPGgj1aLI2YwqEQCMT7edc2K0THk',
+      },
+      styles: [
+        {
+          src: '../../styles/home-anchor-nav.css',
+          integrity: 'sha384-jG6Cq9TypUqqWkapLKCuulUChu/MFL5KRj3BSJXJ712AKivnT+L/vgtM0i7vXSlh',
         },
       ],
     });

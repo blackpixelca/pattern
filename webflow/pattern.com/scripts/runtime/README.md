@@ -17,6 +17,7 @@ modules remain hosted in this repository and are delivered through jsDelivr.
 | --- | --- | --- |
 | Dynamic Year | `[data-dynamic-year]` | None |
 | Marquee | `[data-marquee]` | Marquee CSS |
+| Home Anchor Nav | `[data-home-anchor-nav]`, portable `home_anchor_nav` class | Anchor CSS |
 | Case Study | `[data-case-study-slider], .case-study_slider_wrap` | Swiper 8, GSAP 3 |
 | Accordion | `[data-accordion], [class*="accordion_wrap"]` | GSAP 3 |
 | Video Popup | `.video_player_wrap` | None |
