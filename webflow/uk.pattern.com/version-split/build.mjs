@@ -12,8 +12,8 @@ const auditRoot = resolve(
 
 const release = Object.freeze({
   phase: 5,
-  version: "0.5.0",
-  tag: "uk-version-split-v0.5.0"
+  version: "0.5.1",
+  tag: "uk-version-split-v0.5.1"
 });
 
 const cdnRoot = `https://cdn.jsdelivr.net/gh/specterstudio/pattern@${release.tag}/webflow/uk.pattern.com/version-split`;
@@ -460,7 +460,10 @@ const externalAssets = {
     },
     {
       id: "cta-inject",
-      selector: "[data-cta-inject], [class*='cta']",
+      requiredSelectors: [
+        '[fs-inject-element="target"]',
+        '[fs-inject-element="element"]'
+      ],
       location: "footer",
       url: "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/content/cta-inject.js"
     },
@@ -603,10 +606,26 @@ const loaderJs = `/*
   var featureScripts = ${JSON.stringify(
     externalAssets.features
       .filter((asset) => asset.url.endsWith(".js"))
-      .map(({ id, selector, url }) => ({ id, selector, url })),
+      .map(({ id, requiredSelectors, selector, url }) => ({
+        id,
+        ...(requiredSelectors ? { requiredSelectors } : { selector }),
+        url
+      })),
     null,
     2
   )};
+
+  function hasFeatureMarkup(feature) {
+    if (Array.isArray(feature.requiredSelectors)) {
+      return feature.requiredSelectors.every(function (selector) {
+        return Boolean(document.querySelector(selector));
+      });
+    }
+
+    return Boolean(
+      feature.selector && document.querySelector(feature.selector)
+    );
+  }
 
   loadScript("shared-runtime", new URL("js/shared.js", packageRoot).href)
     .then(function () {
@@ -617,7 +636,7 @@ const loaderJs = `/*
     })
     .then(function () {
       return featureScripts.reduce(function (promise, feature) {
-        if (!document.querySelector(feature.selector)) return promise;
+        if (!hasFeatureMarkup(feature)) return promise;
         return promise.then(function () {
           return loadScript(feature.id, feature.url);
         });

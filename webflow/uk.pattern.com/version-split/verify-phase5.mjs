@@ -172,13 +172,24 @@ try {
     loaderState("/duplicate-shared")
   ]);
 
-  const [sharedComponent, v1Component, v2Component, loaderSource] =
+  const [
+    sharedComponent,
+    v1Component,
+    v2Component,
+    loaderSource,
+    externalAssetsSource
+  ] =
     await Promise.all([
       readFile(join(packageRoot, "components/shared.html"), "utf8"),
       readFile(join(packageRoot, "components/v1.html"), "utf8"),
       readFile(join(packageRoot, "components/v2.html"), "utf8"),
-      readFile(join(packageRoot, "js/loader.js"), "utf8")
+      readFile(join(packageRoot, "js/loader.js"), "utf8"),
+      readFile(join(packageRoot, "external-assets.json"), "utf8")
     ]);
+  const externalAssets = JSON.parse(externalAssetsSource);
+  const ctaInject = externalAssets.features.find(
+    ({ id }) => id === "cta-inject"
+  );
 
   const checks = [
     {
@@ -214,7 +225,7 @@ try {
       check: "V1 marker loads Shared and V1 runtimes without a pilot marker",
       passed:
         loaderV1?.phase === 5 &&
-        loaderV1?.release === "0.5.0" &&
+        loaderV1?.release === "0.5.1" &&
         loaderV1?.status === "ready" &&
         loaderV1?.version === "v1" &&
         loaderV1.loaded.includes("shared-runtime") &&
@@ -225,7 +236,7 @@ try {
       check: "V2 marker loads Shared and V2 runtimes without a pilot marker",
       passed:
         loaderV2?.phase === 5 &&
-        loaderV2?.release === "0.5.0" &&
+        loaderV2?.release === "0.5.1" &&
         loaderV2?.status === "ready" &&
         loaderV2?.version === "v2" &&
         loaderV2.loaded.includes("shared-runtime") &&
@@ -259,17 +270,28 @@ try {
         loaderDuplicate?.loaded.includes("v1-runtime")
     },
     {
-      check: "Designer components reference the immutable 0.5.0 release",
+      check: "Designer components reference the immutable 0.5.1 release",
       passed:
-        sharedComponent.includes("@uk-version-split-v0.5.0/") &&
-        v1Component.includes("@uk-version-split-v0.5.0/") &&
-        v2Component.includes("@uk-version-split-v0.5.0/")
+        sharedComponent.includes("@uk-version-split-v0.5.1/") &&
+        v1Component.includes("@uk-version-split-v0.5.1/") &&
+        v2Component.includes("@uk-version-split-v0.5.1/")
     },
     {
       check: "Permanent loader contains no Phase 4 pilot gate",
       passed:
         loaderSource.includes('querySelectorAll("[data-pattern-version]")') &&
         !loaderSource.includes("data-pattern-asset-pilot")
+    },
+    {
+      check: "CTA injection loads only when both Finsweet injection markers exist",
+      passed:
+        JSON.stringify(ctaInject?.requiredSelectors) === JSON.stringify([
+          '[fs-inject-element="target"]',
+          '[fs-inject-element="element"]'
+        ]) &&
+        !ctaInject?.selector &&
+        loaderSource.includes("feature.requiredSelectors.every") &&
+        !loaderSource.includes("\"selector\": \"[data-cta-inject], [class*='cta']\"")
     }
   ];
 

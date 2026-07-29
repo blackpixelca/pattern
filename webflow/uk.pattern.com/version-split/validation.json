@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-07-29T04:22:04.057Z",
+  "generatedAt": "2026-07-29T15:15:22.487Z",
   "phase": 5,
-  "release": "0.5.0",
-  "tag": "uk-version-split-v0.5.0",
+  "release": "0.5.1",
+  "tag": "uk-version-split-v0.5.1",
   "active": true,
   "pilotOnly": false,
   "rolloutReady": true,
@@ -317,8 +317,8 @@
     },
     {
       "path": "js/loader.js",
-      "bytes": 6352,
-      "sha256": "a4d8fde113324975757129b7b00ba4e467b6ee4a9ff6366b7fe2ef8442c1f632"
+      "bytes": 6730,
+      "sha256": "a5c22e0ddf8af0347eb2df23ecabdf502e6fca4f2cea6d4c2429ab8f6912b7fe"
     },
     {
       "path": "js/shared.js",
@@ -338,27 +338,27 @@
     {
       "path": "components/shared.html",
       "bytes": 516,
-      "sha256": "17e6f3f508ca7f97ec31897d1964eade9abc96a13cc3116be220c1984ff9602c"
+      "sha256": "a61573e6105c3e18538dd8b0f510c19bb3f01c343388c35eb375b999e25b5971"
     },
     {
       "path": "components/v1.html",
       "bytes": 274,
-      "sha256": "3caf704458a8bff9faef362ca82ba671feaf633fd6290e5a68097da6f8482a0d"
+      "sha256": "eb6b914899f704ac9d972c4fa1e3fb3c7c5abbf0c1266886da33b57be8a92351"
     },
     {
       "path": "components/v2.html",
       "bytes": 274,
-      "sha256": "30b01f53c138ffa0955915ef8786dd3c602ff1e12ff28647e9051549142d94e9"
+      "sha256": "bd4974f24a88027b2950a90e169d66ae50479bc28f9a13406ade975f7307bdd3"
     },
     {
       "path": "external-assets.json",
-      "bytes": 3837,
-      "sha256": "0ed6412b06043c7d406bb586d687cb30e52bfad97ad3da845a72bf6a7c003176"
+      "bytes": 3904,
+      "sha256": "d79d5f6ce4839f61c7663a3de5576f4d3d0c3198dfb11b7faee7588bb7754171"
     },
     {
       "path": "manifest.json",
       "bytes": 1828,
-      "sha256": "d1568cffdd665fe9cbf145bfd1f4abdc5e7bc17657e37ff518145a296d58fc91"
+      "sha256": "bc9beb361ca6c15fb027762213407cb773a2a57190476838ff0717b933d3ac46"
     }
   ]
 }

@@ -31,7 +31,7 @@
   function block(reason) {
     global.__patternVersionSplit = {
       phase: 5,
-      release: "0.5.0",
+      release: "0.5.1",
       status: "blocked",
       started: false,
       version: null,
@@ -44,7 +44,7 @@
     document.dispatchEvent(new CustomEvent("pattern:version-split-blocked", {
       detail: {
         phase: 5,
-        release: "0.5.0",
+        release: "0.5.1",
         reason: reason,
         markerValues: markerValues.slice()
       }
@@ -71,7 +71,7 @@
   var packageRoot = new URL("../", currentScript.src);
   var state = global.__patternVersionSplit = {
     phase: 5,
-    release: "0.5.0",
+    release: "0.5.1",
     status: "loading",
     started: true,
     version: version,
@@ -162,7 +162,10 @@
   },
   {
     "id": "cta-inject",
-    "selector": "[data-cta-inject], [class*='cta']",
+    "requiredSelectors": [
+      "[fs-inject-element=\"target\"]",
+      "[fs-inject-element=\"element\"]"
+    ],
     "url": "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/content/cta-inject.js"
   },
   {
@@ -177,6 +180,18 @@
   }
 ];
 
+  function hasFeatureMarkup(feature) {
+    if (Array.isArray(feature.requiredSelectors)) {
+      return feature.requiredSelectors.every(function (selector) {
+        return Boolean(document.querySelector(selector));
+      });
+    }
+
+    return Boolean(
+      feature.selector && document.querySelector(feature.selector)
+    );
+  }
+
   loadScript("shared-runtime", new URL("js/shared.js", packageRoot).href)
     .then(function () {
       return loadScript(
@@ -186,7 +201,7 @@
     })
     .then(function () {
       return featureScripts.reduce(function (promise, feature) {
-        if (!document.querySelector(feature.selector)) return promise;
+        if (!hasFeatureMarkup(feature)) return promise;
         return promise.then(function () {
           return loadScript(feature.id, feature.url);
         });
@@ -204,7 +219,7 @@
       document.dispatchEvent(new CustomEvent("pattern:version-split-ready", {
         detail: {
           phase: 5,
-          release: "0.5.0",
+          release: "0.5.1",
           status: state.status,
           version: version,
           loaded: state.loaded.slice(),

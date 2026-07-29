@@ -1,8 +1,8 @@
 # Pattern UK Version Split
 
 Phase 5 public runtime package for separating Shared, V1, V2, and
-feature-specific assets. Release `0.5.0` is pinned by the immutable tag
-`uk-version-split-v0.5.0`.
+feature-specific assets. Release `0.5.1` is pinned by the immutable tag
+`uk-version-split-v0.5.1`.
 
 This repository contains the public browser assets and their validation tools.
 Page inventories, Webflow identifiers, rollout classifications, and other
@@ -75,13 +75,13 @@ Current validation:
 - 54 of 54 structural checks passed
 - 18 of 18 CSS files parsed in Chromium
 - 468 CSSOM rules parsed
-- 13 of 13 browser behavior/runtime checks passed
+- 14 of 14 browser behavior/runtime checks passed
 - Shared container-token and grid-alias behavior verified
 - V1-only type aliases verified
 - V2 Content Wrapper alignment verified only with a V2 marker
 - Permanent V1 and V2 runtime selection verified without the Phase 4 gate
 - Invalid and conflicting marker states verified to fail closed
-- Designer component resources verified against pinned `v0.5.0` URLs
+- Designer component resources verified against pinned `v0.5.1` URLs
 
 ## Rollout boundary
 

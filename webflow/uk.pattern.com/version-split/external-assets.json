@@ -87,7 +87,10 @@
     },
     {
       "id": "cta-inject",
-      "selector": "[data-cta-inject], [class*='cta']",
+      "requiredSelectors": [
+        "[fs-inject-element=\"target\"]",
+        "[fs-inject-element=\"element\"]"
+      ],
       "location": "footer",
       "url": "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/content/cta-inject.js"
     },
