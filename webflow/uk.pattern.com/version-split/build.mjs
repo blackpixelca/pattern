@@ -10,6 +10,14 @@ const auditRoot = resolve(
   "audits/pattern-uk-version-split/2026-07-28/rollback/custom-code-active"
 );
 
+const release = Object.freeze({
+  phase: 5,
+  version: "0.5.0",
+  tag: "uk-version-split-v0.5.0"
+});
+
+const cdnRoot = `https://cdn.jsdelivr.net/gh/specterstudio/pattern@${release.tag}/webflow/uk.pattern.com/version-split`;
+
 const sourcePaths = {
   lumos: resolve(auditRoot, "01-text-style.html"),
   v1Bridge: resolve(auditRoot, "02-base.html"),
@@ -41,7 +49,7 @@ function banner(name, classification, provenance) {
   return `/*
  * Pattern UK version split — ${name}
  * Classification: ${classification}
- * Phase 4 pilot asset. Active only when explicitly referenced by pilot code.
+ * Phase ${release.phase} rollout asset. Active only through the canonical resource components.
  * Provenance: ${provenance}
  */`;
 }
@@ -289,7 +297,7 @@ const featuresCss = [
 
 const sharedJs = `/*
  * Pattern UK version split — shared runtime
- * Phase 4 pilot asset. Active only when explicitly loaded by the pilot loader.
+ * Phase 5 rollout asset. Loaded only by the marker-based version loader.
  * Preserves the current pageFunctions registry and one-time DOM-ready runner.
  */
 (function (global) {
@@ -349,7 +357,7 @@ const sharedJs = `/*
 
 const v1Js = `/*
  * Pattern UK version split — V1 runtime
- * Phase 4 pilot asset. Active only when explicitly loaded by the pilot loader.
+ * Phase 5 rollout asset. Loaded only for data-pattern-version="v1".
  * The Phase 1 audit found no JavaScript that is exclusively V1.
  */
 "use strict";
@@ -357,7 +365,7 @@ const v1Js = `/*
 
 const v2Js = `/*
  * Pattern UK version split — V2 runtime
- * Phase 4 pilot asset. Active only when explicitly loaded by the pilot loader.
+ * Phase 5 rollout asset. Loaded only for data-pattern-version="v2".
  * The Phase 1 audit found no JavaScript that is exclusively V2.
  */
 "use strict";
@@ -366,7 +374,7 @@ const v2Js = `/*
 const externalAssets = {
   schemaVersion: 1,
   active: true,
-  note: "Phase 4 pilot inventory. JavaScript feature entries are compiled into js/loader.js.",
+  note: "Phase 5 rollout inventory. JavaScript feature entries are compiled into js/loader.js.",
   shared: [
     {
       id: "consentpro",
@@ -472,27 +480,83 @@ const externalAssets = {
 };
 
 const loaderJs = `/*
- * Pattern UK version split — Phase 4 pilot loader
- * Runs only on an explicitly marked pilot root.
+ * Pattern UK version split — Phase 5 marker-based loader
+ * Runs on any page with one consistent data-pattern-version="v1" or "v2" marker.
  */
 (function (global, document) {
   "use strict";
 
-  var pilotRoot = document.querySelector(
-    '[data-pattern-asset-pilot="phase4"][data-pattern-version]'
+  if (
+    global.__patternVersionSplit &&
+    global.__patternVersionSplit.started
+  ) {
+    return;
+  }
+
+  var markerNodes = document.querySelectorAll("[data-pattern-version]");
+  if (!markerNodes.length) return;
+
+  var markerValues = Array.prototype.map.call(
+    markerNodes,
+    function (node) {
+      return node.getAttribute("data-pattern-version");
+    }
   );
-  if (!pilotRoot) return;
+  var invalidValues = markerValues.filter(function (value) {
+    return value !== "v1" && value !== "v2";
+  });
+  var versions = markerValues.filter(function (value, index, values) {
+    return values.indexOf(value) === index;
+  });
 
-  var version = pilotRoot.getAttribute("data-pattern-version");
-  if (version !== "v1" && version !== "v2") return;
+  function block(reason) {
+    global.__patternVersionSplit = {
+      phase: ${release.phase},
+      release: "${release.version}",
+      status: "blocked",
+      started: false,
+      version: null,
+      reason: reason,
+      markerValues: markerValues.slice(),
+      loaded: [],
+      skipped: [],
+      failed: []
+    };
+    document.dispatchEvent(new CustomEvent("pattern:version-split-blocked", {
+      detail: {
+        phase: ${release.phase},
+        release: "${release.version}",
+        reason: reason,
+        markerValues: markerValues.slice()
+      }
+    }));
+  }
 
+  if (invalidValues.length) {
+    block("invalid-version-marker");
+    return;
+  }
+
+  if (versions.length !== 1) {
+    block("conflicting-version-markers");
+    return;
+  }
+
+  var version = versions[0];
   var currentScript = document.currentScript;
-  if (!currentScript || !currentScript.src) return;
+  if (!currentScript || !currentScript.src) {
+    block("loader-source-unavailable");
+    return;
+  }
 
   var packageRoot = new URL("../", currentScript.src);
-  var state = global.__patternVersionSplit = global.__patternVersionSplit || {
-    phase: 4,
+  var state = global.__patternVersionSplit = {
+    phase: ${release.phase},
+    release: "${release.version}",
+    status: "loading",
+    started: true,
     version: version,
+    markerCount: markerNodes.length,
     loaded: [],
     skipped: [],
     failed: []
@@ -567,9 +631,12 @@ const loaderJs = `/*
         global.pageFunctions.executeFunctions();
       }
 
+      state.status = state.failed.length ? "degraded" : "ready";
       document.dispatchEvent(new CustomEvent("pattern:version-split-ready", {
         detail: {
-          phase: 4,
+          phase: ${release.phase},
+          release: "${release.version}",
+          status: state.status,
           version: version,
           loaded: state.loaded.slice(),
           skipped: state.skipped.slice(),
@@ -580,16 +647,29 @@ const loaderJs = `/*
 })(window, document);
 `;
 
+const componentEmbeds = {
+  "components/shared.html": `<!-- Pattern UK version split ${release.version} — Shared resource -->
+<link rel="stylesheet" href="${cdnRoot}/css/shared.css" data-pattern-version-split="${release.version}" data-pattern-split-asset="shared">
+<link rel="stylesheet" href="${cdnRoot}/css/features.css" data-pattern-version-split="${release.version}" data-pattern-split-asset="features">`,
+  "components/v1.html": `<!-- Pattern UK version split ${release.version} — V1 resource -->
+<link rel="stylesheet" href="${cdnRoot}/css/v1.css" data-pattern-version-split="${release.version}" data-pattern-split-asset="v1">`,
+  "components/v2.html": `<!-- Pattern UK version split ${release.version} — V2 resource -->
+<link rel="stylesheet" href="${cdnRoot}/css/v2.css" data-pattern-version-split="${release.version}" data-pattern-split-asset="v2">`
+};
+
 const packageManifest = {
   schemaVersion: 1,
-  phase: 4,
+  phase: release.phase,
+  release: release.version,
+  tag: release.tag,
   active: true,
-  pilotOnly: true,
+  pilotOnly: false,
+  rolloutReady: true,
   marker: {
     attribute: "data-pattern-version",
     values: ["v1", "v2"]
   },
-  loadOrder: ["shared CSS", "version CSS", "feature CSS", "shared JS", "version JS", "feature JS"],
+  loadOrder: ["Shared component CSS", "version component CSS", "shared JS", "version JS", "feature JS"],
   css: {
     shared: "css/shared.css",
     featuresBundle: "css/features.css",
@@ -607,6 +687,24 @@ const packageManifest = {
     versions: {
       v1: "js/v1.js",
       v2: "js/v2.js"
+    }
+  },
+  designerComponents: {
+    order: ["shared", "version"],
+    shared: {
+      name: "Custom Code / Shared",
+      source: "components/shared.html",
+      assets: ["css/shared.css", "css/features.css"]
+    },
+    v1: {
+      name: "Custom Code / V1",
+      source: "components/v1.html",
+      assets: ["css/v1.css"]
+    },
+    v2: {
+      name: "Custom Code / V2",
+      source: "components/v2.html",
+      assets: ["css/v2.css"]
     }
   },
   externalAssets: "external-assets.json"
@@ -656,14 +754,19 @@ const files = new Map([
   ["js/shared.js", sharedJs.trim()],
   ["js/v1.js", v1Js.trim()],
   ["js/v2.js", v2Js.trim()],
+  ...Object.entries(componentEmbeds),
   ["external-assets.json", JSON.stringify(externalAssets, null, 2)],
   ["manifest.json", JSON.stringify(packageManifest, null, 2)]
 ]);
 
 const validation = {
   generatedAt: new Date().toISOString(),
+  phase: release.phase,
+  release: release.version,
+  tag: release.tag,
   active: true,
-  pilotOnly: true,
+  pilotOnly: false,
+  rolloutReady: true,
   checks: [],
   files: []
 };
@@ -771,10 +874,37 @@ validation.checks.push(
     )
   },
   {
-    check: "Pilot loader requires the explicit Phase 4 pilot marker",
+    check: "Permanent loader activates from the explicit version marker",
     passed: files
       .get("js/loader.js")
-      .includes('[data-pattern-asset-pilot="phase4"][data-pattern-version]')
+      .includes('querySelectorAll("[data-pattern-version]")')
+  },
+  {
+    check: "Permanent loader contains no Phase 4 pilot gate",
+    passed: !files
+      .get("js/loader.js")
+      .includes("data-pattern-asset-pilot")
+  },
+  {
+    check: "Shared Designer component owns Shared and Features links",
+    passed:
+      files.get("components/shared.html").includes("/css/shared.css") &&
+      files.get("components/shared.html").includes("/css/features.css")
+  },
+  {
+    check: "Version Designer components own only their matching CSS",
+    passed:
+      files.get("components/v1.html").includes("/css/v1.css") &&
+      !files.get("components/v1.html").includes("/css/v2.css") &&
+      files.get("components/v2.html").includes("/css/v2.css") &&
+      !files.get("components/v2.html").includes("/css/v1.css")
+  },
+  {
+    check: "Manifest is Phase 5 rollout-ready and not pilot-only",
+    passed:
+      packageManifest.phase === 5 &&
+      packageManifest.rolloutReady === true &&
+      packageManifest.pilotOnly === false
   },
   {
     check: "All generated structural checks passed",

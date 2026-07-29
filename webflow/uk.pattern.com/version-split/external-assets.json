@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "active": true,
-  "note": "Phase 4 pilot inventory. JavaScript feature entries are compiled into js/loader.js.",
+  "note": "Phase 5 rollout inventory. JavaScript feature entries are compiled into js/loader.js.",
   "shared": [
     {
       "id": "consentpro",

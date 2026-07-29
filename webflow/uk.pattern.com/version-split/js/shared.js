@@ -1,6 +1,6 @@
 /*
  * Pattern UK version split — shared runtime
- * Phase 4 pilot asset. Active only when explicitly loaded by the pilot loader.
+ * Phase 5 rollout asset. Loaded only by the marker-based version loader.
  * Preserves the current pageFunctions registry and one-time DOM-ready runner.
  */
 (function (global) {

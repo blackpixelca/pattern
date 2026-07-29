@@ -1,8 +1,11 @@
 {
   "schemaVersion": 1,
-  "phase": 4,
+  "phase": 5,
+  "release": "0.5.0",
+  "tag": "uk-version-split-v0.5.0",
   "active": true,
-  "pilotOnly": true,
+  "pilotOnly": false,
+  "rolloutReady": true,
   "marker": {
     "attribute": "data-pattern-version",
     "values": [
@@ -11,9 +14,8 @@
     ]
   },
   "loadOrder": [
-    "shared CSS",
-    "version CSS",
-    "feature CSS",
+    "Shared component CSS",
+    "version component CSS",
     "shared JS",
     "version JS",
     "feature JS"
@@ -48,6 +50,34 @@
     "versions": {
       "v1": "js/v1.js",
       "v2": "js/v2.js"
+    }
+  },
+  "designerComponents": {
+    "order": [
+      "shared",
+      "version"
+    ],
+    "shared": {
+      "name": "Custom Code / Shared",
+      "source": "components/shared.html",
+      "assets": [
+        "css/shared.css",
+        "css/features.css"
+      ]
+    },
+    "v1": {
+      "name": "Custom Code / V1",
+      "source": "components/v1.html",
+      "assets": [
+        "css/v1.css"
+      ]
+    },
+    "v2": {
+      "name": "Custom Code / V2",
+      "source": "components/v2.html",
+      "assets": [
+        "css/v2.css"
+      ]
     }
   },
   "externalAssets": "external-assets.json"

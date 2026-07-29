@@ -1,25 +1,81 @@
 /*
- * Pattern UK version split — Phase 4 pilot loader
- * Runs only on an explicitly marked pilot root.
+ * Pattern UK version split — Phase 5 marker-based loader
+ * Runs on any page with one consistent data-pattern-version="v1" or "v2" marker.
  */
 (function (global, document) {
   "use strict";
 
-  var pilotRoot = document.querySelector(
-    '[data-pattern-asset-pilot="phase4"][data-pattern-version]'
+  if (
+    global.__patternVersionSplit &&
+    global.__patternVersionSplit.started
+  ) {
+    return;
+  }
+
+  var markerNodes = document.querySelectorAll("[data-pattern-version]");
+  if (!markerNodes.length) return;
+
+  var markerValues = Array.prototype.map.call(
+    markerNodes,
+    function (node) {
+      return node.getAttribute("data-pattern-version");
+    }
   );
-  if (!pilotRoot) return;
+  var invalidValues = markerValues.filter(function (value) {
+    return value !== "v1" && value !== "v2";
+  });
+  var versions = markerValues.filter(function (value, index, values) {
+    return values.indexOf(value) === index;
+  });
 
-  var version = pilotRoot.getAttribute("data-pattern-version");
-  if (version !== "v1" && version !== "v2") return;
+  function block(reason) {
+    global.__patternVersionSplit = {
+      phase: 5,
+      release: "0.5.0",
+      status: "blocked",
+      started: false,
+      version: null,
+      reason: reason,
+      markerValues: markerValues.slice(),
+      loaded: [],
+      skipped: [],
+      failed: []
+    };
+    document.dispatchEvent(new CustomEvent("pattern:version-split-blocked", {
+      detail: {
+        phase: 5,
+        release: "0.5.0",
+        reason: reason,
+        markerValues: markerValues.slice()
+      }
+    }));
+  }
 
+  if (invalidValues.length) {
+    block("invalid-version-marker");
+    return;
+  }
+
+  if (versions.length !== 1) {
+    block("conflicting-version-markers");
+    return;
+  }
+
+  var version = versions[0];
   var currentScript = document.currentScript;
-  if (!currentScript || !currentScript.src) return;
+  if (!currentScript || !currentScript.src) {
+    block("loader-source-unavailable");
+    return;
+  }
 
   var packageRoot = new URL("../", currentScript.src);
-  var state = global.__patternVersionSplit = global.__patternVersionSplit || {
-    phase: 4,
+  var state = global.__patternVersionSplit = {
+    phase: 5,
+    release: "0.5.0",
+    status: "loading",
+    started: true,
     version: version,
+    markerCount: markerNodes.length,
     loaded: [],
     skipped: [],
     failed: []
@@ -144,9 +200,12 @@
         global.pageFunctions.executeFunctions();
       }
 
+      state.status = state.failed.length ? "degraded" : "ready";
       document.dispatchEvent(new CustomEvent("pattern:version-split-ready", {
         detail: {
-          phase: 4,
+          phase: 5,
+          release: "0.5.0",
+          status: state.status,
           version: version,
           loaded: state.loaded.slice(),
           skipped: state.skipped.slice(),
