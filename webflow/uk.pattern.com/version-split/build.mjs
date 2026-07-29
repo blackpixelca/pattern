@@ -1,0 +1,719 @@
+import { createHash } from "node:crypto";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const packageRoot = dirname(fileURLToPath(import.meta.url));
+const repoRoot = resolve(packageRoot, "../../..");
+const auditRoot = resolve(
+  repoRoot,
+  "audits/pattern-uk-version-split/2026-07-28/rollback/custom-code-active"
+);
+
+const sourcePaths = {
+  lumos: resolve(auditRoot, "01-text-style.html"),
+  v1Bridge: resolve(auditRoot, "02-base.html"),
+  siteOverrides: resolve(auditRoot, "03-color.html"),
+  marketo: resolve(auditRoot, "04-responsive.html")
+};
+
+const sources = Object.fromEntries(
+  await Promise.all(
+    Object.entries(sourcePaths).map(async ([key, path]) => [
+      key,
+      await readFile(path, "utf8")
+    ])
+  )
+);
+
+const lines = Object.fromEntries(
+  Object.entries(sources).map(([key, value]) => [
+    key,
+    value.replace(/\r\n?/g, "\n").split("\n")
+  ])
+);
+
+function lineRange(sourceKey, start, end) {
+  return lines[sourceKey].slice(start - 1, end).join("\n").trim();
+}
+
+function banner(name, classification, provenance) {
+  return `/*
+ * Pattern UK version split — ${name}
+ * Classification: ${classification}
+ * Phase 4 pilot asset. Active only when explicitly referenced by pilot code.
+ * Provenance: ${provenance}
+ */`;
+}
+
+function scopeV1(css) {
+  return css
+    .replaceAll(
+      ":where(body:has(:is(.page_code_wrap, .page_main.cc-v1)))",
+      ':where(body:is([data-pattern-version="v1"], :has([data-pattern-version="v1"])))'
+    )
+    .replaceAll(
+      ":root:has(body :is(.page_code_wrap, .page_main.cc-v1))",
+      ':root:has([data-pattern-version="v1"])'
+    )
+    .replaceAll(
+      "html:has(body :is(.page_code_wrap, .page_main.cc-v1))",
+      'html:has([data-pattern-version="v1"])'
+    )
+    .replaceAll(
+      "body:has(:is(.page_code_wrap, .page_main.cc-v1))",
+      'body:is([data-pattern-version="v1"], :has([data-pattern-version="v1"]))'
+    )
+    .replaceAll(".page_main.cc-v1", '[data-pattern-version="v1"]')
+    .replace(
+      "Apply the cc-v1 combo class to the V1 page's .page_main element.",
+      'Apply data-pattern-version="v1" to the mapped page root.'
+    );
+}
+
+const sharedCss = [
+  banner(
+    "Shared foundation",
+    "shared",
+    "active Custom Code 01 plus shared global helpers from active Custom Code 03"
+  ),
+  lineRange("lumos", 2, 570),
+  lineRange("siteOverrides", 66, 77),
+  lineRange("siteOverrides", 93, 100)
+].join("\n\n");
+
+const v1UniqueGrid = `/* Unique V1 grid aliases removed from the duplicated V2-priority block. */
+:root:has([data-pattern-version="v1"]) {
+  --grid-1: repeat(1, minmax(0, 1fr));
+  --grid-2: repeat(2, minmax(0, 1fr));
+  --grid-3: repeat(3, minmax(0, 1fr));
+  --grid-4: repeat(4, minmax(0, 1fr));
+  --grid-5: repeat(5, minmax(0, 1fr));
+  --grid-6: repeat(6, minmax(0, 1fr));
+  --grid-7: repeat(7, minmax(0, 1fr));
+  --grid-8: repeat(8, minmax(0, 1fr));
+  --grid-9: repeat(9, minmax(0, 1fr));
+  --grid-10: repeat(10, minmax(0, 1fr));
+  --grid-11: repeat(11, minmax(0, 1fr));
+  --grid-12: repeat(12, minmax(0, 1fr));
+}`;
+
+const v1Css = [
+  banner(
+    "V1 compatibility",
+    "v1",
+    "active Custom Code 02 with explicit marker scoping and de-duplicated V1 grid aliases"
+  ),
+  scopeV1(lineRange("v1Bridge", 4, 715)),
+  v1UniqueGrid
+].join("\n\n");
+
+const v2Css = [
+  banner(
+    "V2 core",
+    "v2",
+    "Content Wrapper alignment repair from active Custom Code 03"
+  ),
+  'body:is([data-pattern-version="v2"], :has([data-pattern-version="v2"])) {',
+  lineRange("siteOverrides", 101, 135),
+  "}"
+].join("\n\n");
+
+const featureModules = {
+  "icons.css": [
+    banner(
+      "Tabler icons",
+      "feature",
+      "active Custom Code 02 import"
+    ),
+    lineRange("v1Bridge", 2, 2)
+  ].join("\n\n"),
+  "cards-icons.css": [
+    banner(
+      "Cards and icons",
+      "feature",
+      "active Custom Code 03 section 2"
+    ),
+    lineRange("siteOverrides", 136, 198)
+  ].join("\n\n"),
+  "buttons-animations.css": [
+    banner(
+      "Buttons and animations",
+      "feature",
+      "active Custom Code 03 section 3"
+    ),
+    lineRange("siteOverrides", 199, 253)
+  ].join("\n\n"),
+  "gradients.css": [
+    banner(
+      "Gradients",
+      "feature",
+      "active Custom Code 03 section 4"
+    ),
+    lineRange("siteOverrides", 254, 438)
+  ].join("\n\n"),
+  "accordion-faq.css": [
+    banner(
+      "Accordion and FAQ",
+      "feature",
+      "active Custom Code 03 section 5"
+    ),
+    lineRange("siteOverrides", 439, 465)
+  ].join("\n\n"),
+  "swiper.css": [
+    banner(
+      "Swiper",
+      "feature",
+      "active Custom Code 03 section 6"
+    ),
+    lineRange("siteOverrides", 466, 480)
+  ].join("\n\n"),
+  "logos-designer.css": [
+    banner(
+      "Brand logos Designer state",
+      "feature",
+      "active Custom Code 03 section 7"
+    ),
+    lineRange("siteOverrides", 481, 490)
+  ].join("\n\n"),
+  "navigation.css": [
+    banner(
+      "Navigation details",
+      "feature",
+      "active Custom Code 03 section 8"
+    ),
+    lineRange("siteOverrides", 491, 502)
+  ].join("\n\n"),
+  "modal.css": [
+    banner(
+      "Modal state",
+      "feature",
+      "active Custom Code 03 global modal state and section 9"
+    ),
+    lineRange("siteOverrides", 78, 91),
+    lineRange("siteOverrides", 503, 510)
+  ].join("\n\n"),
+  "lightbox.css": [
+    banner(
+      "Lightbox hover",
+      "feature",
+      "active Custom Code 03 section 10"
+    ),
+    lineRange("siteOverrides", 511, 531)
+  ].join("\n\n"),
+  "marquee.css": [
+    banner(
+      "Marquee animation",
+      "feature",
+      "active Custom Code 03 section 11"
+    ),
+    lineRange("siteOverrides", 532, 570)
+  ].join("\n\n"),
+  "grid-media.css": [
+    banner(
+      "Grid media",
+      "feature",
+      "active Custom Code 03 section 12"
+    ),
+    lineRange("siteOverrides", 570, 580)
+  ].join("\n\n"),
+  "rich-text.css": [
+    banner(
+      "Rich text",
+      "feature",
+      "active Custom Code 03 section 13"
+    ),
+    lineRange("siteOverrides", 581, 598)
+  ].join("\n\n"),
+  "marketo.css": [
+    banner(
+      "Marketo forms",
+      "shared feature",
+      "active Custom Code 04"
+    ),
+    lineRange("marketo", 2, 493)
+  ].join("\n\n")
+};
+
+const featuresCss = [
+  banner(
+    "Feature bundle",
+    "shared features",
+    "concatenated Phase 3 feature modules in manifest order"
+  ),
+  ...Object.values(featureModules)
+].join("\n\n");
+
+const sharedJs = `/*
+ * Pattern UK version split — shared runtime
+ * Phase 4 pilot asset. Active only when explicitly loaded by the pilot loader.
+ * Preserves the current pageFunctions registry and one-time DOM-ready runner.
+ */
+(function (global) {
+  "use strict";
+
+  global.pageFunctions = global.pageFunctions || {
+    executed: {},
+    functions: {},
+    added: false,
+
+    addFunction: function (id, fn) {
+      if (!id || typeof fn !== "function") return;
+
+      if (!this.functions[id]) {
+        this.functions[id] = fn;
+      }
+    },
+
+    executeFunctions: function () {
+      if (this.added) return;
+      this.added = true;
+
+      for (var id in this.functions) {
+        if (
+          Object.prototype.hasOwnProperty.call(this.functions, id) &&
+          !this.executed[id]
+        ) {
+          try {
+            this.functions[id]();
+            this.executed[id] = true;
+          } catch (error) {
+            console.error("Error executing page function " + id + ":", error);
+          }
+        }
+      }
+    }
+  };
+
+  function runPageFunctions() {
+    if (
+      global.pageFunctions &&
+      typeof global.pageFunctions.executeFunctions === "function"
+    ) {
+      global.pageFunctions.executeFunctions();
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", runPageFunctions, {
+      once: true
+    });
+  } else {
+    runPageFunctions();
+  }
+})(window);
+`;
+
+const v1Js = `/*
+ * Pattern UK version split — V1 runtime
+ * Phase 4 pilot asset. Active only when explicitly loaded by the pilot loader.
+ * The Phase 1 audit found no JavaScript that is exclusively V1.
+ */
+"use strict";
+`;
+
+const v2Js = `/*
+ * Pattern UK version split — V2 runtime
+ * Phase 4 pilot asset. Active only when explicitly loaded by the pilot loader.
+ * The Phase 1 audit found no JavaScript that is exclusively V2.
+ */
+"use strict";
+`;
+
+const externalAssets = {
+  schemaVersion: 1,
+  active: true,
+  note: "Phase 4 pilot inventory. JavaScript feature entries are compiled into js/loader.js.",
+  shared: [
+    {
+      id: "consentpro",
+      location: "head",
+      url: "https://api.consentpro.com/v2/cdn/runtime/684987756493653cc7c5a406.js"
+    },
+    {
+      id: "marketo-forms2",
+      location: "head",
+      url: "https://go.pattern.com/js/forms2/js/forms2.min.js"
+    },
+    {
+      id: "nav-css",
+      location: "head",
+      url: "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/styles/nav.css"
+    },
+    {
+      id: "nav-js",
+      location: "footer",
+      url: "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/nav/nav.js"
+    }
+  ],
+  features: [
+    {
+      id: "splide-css",
+      selector: ".splide",
+      location: "head",
+      url: "https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css"
+    },
+    {
+      id: "splide-js",
+      selector: ".splide",
+      location: "footer",
+      url: "https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js"
+    },
+    {
+      id: "pagination-css",
+      selector: "[class*='pagination']",
+      location: "head",
+      url: "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/styles/pagination-fix.css"
+    },
+    {
+      id: "pagination-js",
+      selector: "[class*='pagination']",
+      location: "footer",
+      url: "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/interaction/pagination-fix.js"
+    },
+    {
+      id: "video-popup",
+      selector: "[class*='video_popup'], [data-video-popup]",
+      location: "head",
+      url: "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/media/video-popup.js"
+    },
+    {
+      id: "logos",
+      selector: "[class*='logo']",
+      location: "footer",
+      url: "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/content/logos.js"
+    },
+    {
+      id: "rich-text-heading-conversion",
+      selector: ".w-richtext",
+      location: "footer",
+      url: "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/content/rich-text-heading-conversion.js"
+    },
+    {
+      id: "faq-schema",
+      selector: "[class*='faq']",
+      location: "footer",
+      url: "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/schema/faq-schema-generator.js"
+    },
+    {
+      id: "accordion",
+      selector: "[class*='accordion']",
+      location: "footer",
+      url: "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/interaction/accordion.js"
+    },
+    {
+      id: "lazy-load",
+      selector: "[loading='lazy'], [data-src]",
+      location: "footer",
+      url: "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/interaction/lazy-load.js"
+    },
+    {
+      id: "cta-inject",
+      selector: "[data-cta-inject], [class*='cta']",
+      location: "footer",
+      url: "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/content/cta-inject.js"
+    },
+    {
+      id: "iframe-popup",
+      selector: "[data-iframe-popup], [class*='iframe_popup']",
+      location: "footer",
+      url: "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.2/webflow/pattern.com/scripts/media/iframe-popup.js"
+    },
+    {
+      id: "card-load-animations",
+      selector: "[class*='card']",
+      location: "footer",
+      url: "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/interaction/card-load-animations-v10.js"
+    }
+  ]
+};
+
+const loaderJs = `/*
+ * Pattern UK version split — Phase 4 pilot loader
+ * Runs only on an explicitly marked pilot root.
+ */
+(function (global, document) {
+  "use strict";
+
+  var pilotRoot = document.querySelector(
+    '[data-pattern-asset-pilot="phase4"][data-pattern-version]'
+  );
+  if (!pilotRoot) return;
+
+  var version = pilotRoot.getAttribute("data-pattern-version");
+  if (version !== "v1" && version !== "v2") return;
+
+  var currentScript = document.currentScript;
+  if (!currentScript || !currentScript.src) return;
+
+  var packageRoot = new URL("../", currentScript.src);
+  var state = global.__patternVersionSplit = global.__patternVersionSplit || {
+    phase: 4,
+    version: version,
+    loaded: [],
+    skipped: [],
+    failed: []
+  };
+
+  function normalizedUrl(url) {
+    return new URL(url, document.baseURI).href;
+  }
+
+  function hasScript(url) {
+    var expected = normalizedUrl(url);
+    return Array.prototype.some.call(
+      document.querySelectorAll("script[src]"),
+      function (script) {
+        return normalizedUrl(script.src) === expected;
+      }
+    );
+  }
+
+  function loadScript(id, url) {
+    return new Promise(function (resolve) {
+      if (hasScript(url)) {
+        state.skipped.push(id);
+        resolve();
+        return;
+      }
+
+      var script = document.createElement("script");
+      script.src = url;
+      script.defer = true;
+      script.dataset.patternSplitAsset = id;
+      script.addEventListener("load", function () {
+        state.loaded.push(id);
+        resolve();
+      }, { once: true });
+      script.addEventListener("error", function () {
+        state.failed.push(id);
+        resolve();
+      }, { once: true });
+      document.body.appendChild(script);
+    });
+  }
+
+  var featureScripts = ${JSON.stringify(
+    externalAssets.features
+      .filter((asset) => asset.url.endsWith(".js"))
+      .map(({ id, selector, url }) => ({ id, selector, url })),
+    null,
+    2
+  )};
+
+  loadScript("shared-runtime", new URL("js/shared.js", packageRoot).href)
+    .then(function () {
+      return loadScript(
+        version + "-runtime",
+        new URL("js/" + version + ".js", packageRoot).href
+      );
+    })
+    .then(function () {
+      return featureScripts.reduce(function (promise, feature) {
+        if (!document.querySelector(feature.selector)) return promise;
+        return promise.then(function () {
+          return loadScript(feature.id, feature.url);
+        });
+      }, Promise.resolve());
+    })
+    .then(function () {
+      if (
+        global.pageFunctions &&
+        typeof global.pageFunctions.executeFunctions === "function"
+      ) {
+        global.pageFunctions.executeFunctions();
+      }
+
+      document.dispatchEvent(new CustomEvent("pattern:version-split-ready", {
+        detail: {
+          phase: 4,
+          version: version,
+          loaded: state.loaded.slice(),
+          skipped: state.skipped.slice(),
+          failed: state.failed.slice()
+        }
+      }));
+    });
+})(window, document);
+`;
+
+const packageManifest = {
+  schemaVersion: 1,
+  phase: 4,
+  active: true,
+  pilotOnly: true,
+  marker: {
+    attribute: "data-pattern-version",
+    values: ["v1", "v2"]
+  },
+  loadOrder: ["shared CSS", "version CSS", "feature CSS", "shared JS", "version JS", "feature JS"],
+  css: {
+    shared: "css/shared.css",
+    featuresBundle: "css/features.css",
+    versions: {
+      v1: "css/v1.css",
+      v2: "css/v2.css"
+    },
+    features: Object.keys(featureModules).map(
+      (name) => `css/features/${name}`
+    )
+  },
+  js: {
+    loader: "js/loader.js",
+    shared: "js/shared.js",
+    versions: {
+      v1: "js/v1.js",
+      v2: "js/v2.js"
+    }
+  },
+  externalAssets: "external-assets.json"
+};
+
+function countBraces(content) {
+  const withoutComments = content.replace(/\/\*[\s\S]*?\*\//g, "");
+  let balance = 0;
+  let quote = null;
+  let escaped = false;
+
+  for (const character of withoutComments) {
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (character === "\\") {
+      escaped = true;
+      continue;
+    }
+    if (quote) {
+      if (character === quote) quote = null;
+      continue;
+    }
+    if (character === '"' || character === "'") {
+      quote = character;
+      continue;
+    }
+    if (character === "{") balance += 1;
+    if (character === "}") balance -= 1;
+    if (balance < 0) return balance;
+  }
+
+  return balance;
+}
+
+const files = new Map([
+  ["css/shared.css", sharedCss],
+  ["css/v1.css", v1Css],
+  ["css/v2.css", v2Css],
+  ["css/features.css", featuresCss],
+  ...Object.entries(featureModules).map(([name, value]) => [
+    `css/features/${name}`,
+    value
+  ]),
+  ["js/loader.js", loaderJs.trim()],
+  ["js/shared.js", sharedJs.trim()],
+  ["js/v1.js", v1Js.trim()],
+  ["js/v2.js", v2Js.trim()],
+  ["external-assets.json", JSON.stringify(externalAssets, null, 2)],
+  ["manifest.json", JSON.stringify(packageManifest, null, 2)]
+]);
+
+const validation = {
+  generatedAt: new Date().toISOString(),
+  active: true,
+  pilotOnly: true,
+  checks: [],
+  files: []
+};
+
+for (const [relativePath, content] of files) {
+  const normalized = `${content.trim()}\n`;
+  const targetPath = resolve(packageRoot, relativePath);
+  await mkdir(dirname(targetPath), { recursive: true });
+  await writeFile(targetPath, normalized, "utf8");
+
+  validation.files.push({
+    path: relativePath,
+    bytes: Buffer.byteLength(normalized),
+    sha256: createHash("sha256").update(normalized).digest("hex")
+  });
+
+  if (relativePath.endsWith(".css")) {
+    validation.checks.push({
+      check: `${relativePath}: no style tags`,
+      passed: !/<\/?style\b/i.test(normalized)
+    });
+    validation.checks.push({
+      check: `${relativePath}: balanced braces`,
+      passed: countBraces(normalized) === 0
+    });
+  }
+}
+
+validation.checks.push(
+  {
+    check: "V1 CSS contains no page_code_wrap signal",
+    passed: !files.get("css/v1.css").includes(".page_code_wrap")
+  },
+  {
+    check: "V1 CSS contains explicit v1 marker",
+    passed: files.get("css/v1.css").includes('[data-pattern-version="v1"]')
+  },
+  {
+    check: "V2 CSS contains explicit v2 marker",
+    passed: files.get("css/v2.css").includes('[data-pattern-version="v2"]')
+  },
+  {
+    check: "V2 CSS excludes the duplicated V1 grid root",
+    passed: !files.get("css/v2.css").includes("--site--column-count")
+  },
+  {
+    check: "Shared Marketo feature keeps rendered-form scope",
+    passed: files
+      .get("css/features/marketo.css")
+      .includes('.mktoForm[id^="mktoForm_"]')
+  },
+  {
+    check: "Feature bundle includes every feature module",
+    passed: Object.values(featureModules).every((moduleCss) =>
+      files.get("css/features.css").includes(moduleCss)
+    )
+  },
+  {
+    check: "Pilot loader requires the explicit Phase 4 pilot marker",
+    passed: files
+      .get("js/loader.js")
+      .includes('[data-pattern-asset-pilot="phase4"][data-pattern-version]')
+  },
+  {
+    check: "All generated structural checks passed",
+    passed: true
+  }
+);
+
+const failedChecks = validation.checks.filter((check) => !check.passed);
+validation.checks.at(-1).passed = failedChecks.length === 0;
+
+await writeFile(
+  resolve(packageRoot, "validation.json"),
+  `${JSON.stringify(validation, null, 2)}\n`,
+  "utf8"
+);
+
+if (failedChecks.length > 0) {
+  console.error(JSON.stringify({ failedChecks }, null, 2));
+  process.exitCode = 1;
+} else {
+  console.log(
+    JSON.stringify(
+      {
+        generatedFiles: files.size,
+        cssFiles: [...files.keys()].filter((path) => path.endsWith(".css")).length,
+        jsFiles: [...files.keys()].filter((path) => path.endsWith(".js")).length,
+        checks: validation.checks.length,
+        failedChecks: 0
+      },
+      null,
+      2
+    )
+  );
+}

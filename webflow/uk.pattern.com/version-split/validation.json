@@ -1,0 +1,305 @@
+{
+  "generatedAt": "2026-07-29T00:28:18.496Z",
+  "active": true,
+  "pilotOnly": true,
+  "checks": [
+    {
+      "check": "css/shared.css: no style tags",
+      "passed": true
+    },
+    {
+      "check": "css/shared.css: balanced braces",
+      "passed": true
+    },
+    {
+      "check": "css/v1.css: no style tags",
+      "passed": true
+    },
+    {
+      "check": "css/v1.css: balanced braces",
+      "passed": true
+    },
+    {
+      "check": "css/v2.css: no style tags",
+      "passed": true
+    },
+    {
+      "check": "css/v2.css: balanced braces",
+      "passed": true
+    },
+    {
+      "check": "css/features.css: no style tags",
+      "passed": true
+    },
+    {
+      "check": "css/features.css: balanced braces",
+      "passed": true
+    },
+    {
+      "check": "css/features/icons.css: no style tags",
+      "passed": true
+    },
+    {
+      "check": "css/features/icons.css: balanced braces",
+      "passed": true
+    },
+    {
+      "check": "css/features/cards-icons.css: no style tags",
+      "passed": true
+    },
+    {
+      "check": "css/features/cards-icons.css: balanced braces",
+      "passed": true
+    },
+    {
+      "check": "css/features/buttons-animations.css: no style tags",
+      "passed": true
+    },
+    {
+      "check": "css/features/buttons-animations.css: balanced braces",
+      "passed": true
+    },
+    {
+      "check": "css/features/gradients.css: no style tags",
+      "passed": true
+    },
+    {
+      "check": "css/features/gradients.css: balanced braces",
+      "passed": true
+    },
+    {
+      "check": "css/features/accordion-faq.css: no style tags",
+      "passed": true
+    },
+    {
+      "check": "css/features/accordion-faq.css: balanced braces",
+      "passed": true
+    },
+    {
+      "check": "css/features/swiper.css: no style tags",
+      "passed": true
+    },
+    {
+      "check": "css/features/swiper.css: balanced braces",
+      "passed": true
+    },
+    {
+      "check": "css/features/logos-designer.css: no style tags",
+      "passed": true
+    },
+    {
+      "check": "css/features/logos-designer.css: balanced braces",
+      "passed": true
+    },
+    {
+      "check": "css/features/navigation.css: no style tags",
+      "passed": true
+    },
+    {
+      "check": "css/features/navigation.css: balanced braces",
+      "passed": true
+    },
+    {
+      "check": "css/features/modal.css: no style tags",
+      "passed": true
+    },
+    {
+      "check": "css/features/modal.css: balanced braces",
+      "passed": true
+    },
+    {
+      "check": "css/features/lightbox.css: no style tags",
+      "passed": true
+    },
+    {
+      "check": "css/features/lightbox.css: balanced braces",
+      "passed": true
+    },
+    {
+      "check": "css/features/marquee.css: no style tags",
+      "passed": true
+    },
+    {
+      "check": "css/features/marquee.css: balanced braces",
+      "passed": true
+    },
+    {
+      "check": "css/features/grid-media.css: no style tags",
+      "passed": true
+    },
+    {
+      "check": "css/features/grid-media.css: balanced braces",
+      "passed": true
+    },
+    {
+      "check": "css/features/rich-text.css: no style tags",
+      "passed": true
+    },
+    {
+      "check": "css/features/rich-text.css: balanced braces",
+      "passed": true
+    },
+    {
+      "check": "css/features/marketo.css: no style tags",
+      "passed": true
+    },
+    {
+      "check": "css/features/marketo.css: balanced braces",
+      "passed": true
+    },
+    {
+      "check": "V1 CSS contains no page_code_wrap signal",
+      "passed": true
+    },
+    {
+      "check": "V1 CSS contains explicit v1 marker",
+      "passed": true
+    },
+    {
+      "check": "V2 CSS contains explicit v2 marker",
+      "passed": true
+    },
+    {
+      "check": "V2 CSS excludes the duplicated V1 grid root",
+      "passed": true
+    },
+    {
+      "check": "Shared Marketo feature keeps rendered-form scope",
+      "passed": true
+    },
+    {
+      "check": "Feature bundle includes every feature module",
+      "passed": true
+    },
+    {
+      "check": "Pilot loader requires the explicit Phase 4 pilot marker",
+      "passed": true
+    },
+    {
+      "check": "All generated structural checks passed",
+      "passed": true
+    }
+  ],
+  "files": [
+    {
+      "path": "css/shared.css",
+      "bytes": 22017,
+      "sha256": "47b7322eee6effcddb5d9c019d71a5239f526d688d7a1a0b7682dc1ef48186b9"
+    },
+    {
+      "path": "css/v1.css",
+      "bytes": 38295,
+      "sha256": "918bda490306f2f18060444330805d3f94f4cc985622ed85b58cb6e2aac09f48"
+    },
+    {
+      "path": "css/v2.css",
+      "bytes": 1526,
+      "sha256": "f49dec26373c1e3af0a2e3055909012147afc4831d92ce49c92f0f4c203473db"
+    },
+    {
+      "path": "css/features.css",
+      "bytes": 34778,
+      "sha256": "37a9f2348969d972e9c680c0fb8b00c612ccefd0206acbc4c96c48442ab37cd3"
+    },
+    {
+      "path": "css/features/icons.css",
+      "bytes": 302,
+      "sha256": "5a9c06b9fde0f6f1ec4c3c6d686fcfefccc89ea77dbce3ffa13c575222652de3"
+    },
+    {
+      "path": "css/features/cards-icons.css",
+      "bytes": 2347,
+      "sha256": "93f0bde0c8ec920c22985f3f5b02864a80d1cae45826204e1b6896c296abb227"
+    },
+    {
+      "path": "css/features/buttons-animations.css",
+      "bytes": 1667,
+      "sha256": "985c32e89e69b52404a0d9e89c708fdaeecaecda63b965f2b718060a43014ce4"
+    },
+    {
+      "path": "css/features/gradients.css",
+      "bytes": 7171,
+      "sha256": "14ff836d01c259cd76cba68dab9b7852807d53c304bb328842e99046a6409ae7"
+    },
+    {
+      "path": "css/features/accordion-faq.css",
+      "bytes": 1053,
+      "sha256": "f167cb0f7badc2c01634bccd4d0fc268c3b14bcdee9018dddfdfa5c0ea6785f9"
+    },
+    {
+      "path": "css/features/swiper.css",
+      "bytes": 621,
+      "sha256": "e8046269abd555b599d419928788a3536bd688b2459ffa578c8b8021f9ea5701"
+    },
+    {
+      "path": "css/features/logos-designer.css",
+      "bytes": 656,
+      "sha256": "ae03f4c8aa41cdf8bd1fd2ad43ba594ff2500e11b796b4e6da5ff5f5dc7e18a1"
+    },
+    {
+      "path": "css/features/navigation.css",
+      "bytes": 577,
+      "sha256": "6b5131df48ae48722ae5fbad4747023272fc5a923d126b73401803c35b91f253"
+    },
+    {
+      "path": "css/features/modal.css",
+      "bytes": 822,
+      "sha256": "f5dd8f72c3b2298732b774bdd39baf1f157a3ee7dc93d4f2169d6430d0a64205"
+    },
+    {
+      "path": "css/features/lightbox.css",
+      "bytes": 838,
+      "sha256": "1b6e43d5d9c5df7dc14da4e86a9aa5c4c32fdbf04db26cf59565941eb03c6edc"
+    },
+    {
+      "path": "css/features/marquee.css",
+      "bytes": 1144,
+      "sha256": "0f3702a30cd201a7315be7c1c85d2ff2c7a3e741d185d4ca7061950a81deb873"
+    },
+    {
+      "path": "css/features/grid-media.css",
+      "bytes": 651,
+      "sha256": "78450b1ac274ff5da3aa32cbd8aeb0fd4699dc4df77085a8ae14c9e0d295ad20"
+    },
+    {
+      "path": "css/features/rich-text.css",
+      "bytes": 780,
+      "sha256": "55778958f546dfe2d6ce23b7ed5cf9f3484ca6d659418faf7574034a94310189"
+    },
+    {
+      "path": "css/features/marketo.css",
+      "bytes": 15898,
+      "sha256": "b0ada8f21b961153ff519168309a2ffe1fb69499e1d2a33171332121f65213ac"
+    },
+    {
+      "path": "js/loader.js",
+      "bytes": 4993,
+      "sha256": "fdc8785aaeb001a1eda574ea463d04d204da254dd4ea859e9356a9253e4222c9"
+    },
+    {
+      "path": "js/shared.js",
+      "bytes": 1413,
+      "sha256": "3f5c02eb96d14a374c81db085ad95a5919559ae40627e5e6677c5dbc479f23d1"
+    },
+    {
+      "path": "js/v1.js",
+      "bytes": 209,
+      "sha256": "65709325b8afaf4812bef74138e15c11deaa6d920ddec88d4af418b285a09a97"
+    },
+    {
+      "path": "js/v2.js",
+      "bytes": 209,
+      "sha256": "9139427d5a36a0941ea754a5c52eb5350aa80b615fb83554157a548aef122718"
+    },
+    {
+      "path": "external-assets.json",
+      "bytes": 3835,
+      "sha256": "53405c1e9af8e4b1fc75b626ad3d7f19d8d82d5efd89ef43e4117ad0fd6561a7"
+    },
+    {
+      "path": "manifest.json",
+      "bytes": 1202,
+      "sha256": "0d552a7e85610ae453cd3f08aa9edb166a8423121f0ee201940a60608e0547e0"
+    }
+  ]
+}
