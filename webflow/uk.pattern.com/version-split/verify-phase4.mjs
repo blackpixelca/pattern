@@ -111,6 +111,9 @@ try {
       </main>
     </body>`);
   await behaviorPage.addStyleTag({
+    content: await readFile(join(cssRoot, "shared.css"), "utf8")
+  });
+  await behaviorPage.addStyleTag({
     content: await readFile(join(cssRoot, "v1.css"), "utf8")
   });
   await behaviorPage.addStyleTag({
@@ -126,6 +129,8 @@ try {
       const childStyle = getComputedStyle(document.querySelector("#child"));
       return {
         columns: bodyStyle.getPropertyValue("--site--column-count").trim(),
+        sharedGridAlias: bodyStyle.getPropertyValue("--grid-12").trim(),
+        v1TypeAlias: bodyStyle.getPropertyValue("--d1--font-size").trim(),
         wrapperTextAlign: wrapperStyle.textAlign,
         wrapperJustifyItems: wrapperStyle.justifyItems,
         childTextAlign: childStyle.textAlign
@@ -155,8 +160,20 @@ try {
       passed: cssResults.length === 18 && cssResults.every(({ rules }) => rules > 0)
     },
     {
-      check: "V1 variables activate only on V1",
-      passed: markerV1.columns === "12" && markerV2.columns === ""
+      check: "Shared container variables activate on both versions",
+      passed: markerV1.columns === "12" && markerV2.columns === "12"
+    },
+    {
+      check: "Shared grid aliases activate on both versions",
+      passed:
+        markerV1.sharedGridAlias === "repeat(12, minmax(0, 1fr))" &&
+        markerV2.sharedGridAlias === "repeat(12, minmax(0, 1fr))"
+    },
+    {
+      check: "V1-only type aliases activate only on V1",
+      passed:
+        markerV1.v1TypeAlias.includes("clamp(") &&
+        markerV2.v1TypeAlias === ""
     },
     {
       check: "V2 alignment activates on V2",

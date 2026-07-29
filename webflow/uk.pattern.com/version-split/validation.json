@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-29T00:47:47.490Z",
+  "generatedAt": "2026-07-29T00:59:38.276Z",
   "active": true,
   "pilotOnly": true,
   "checks": [
@@ -164,6 +164,14 @@
       "passed": true
     },
     {
+      "check": "Shared CSS owns unsuffixed container tokens required by shared Header and Footer",
+      "passed": true
+    },
+    {
+      "check": "Shared CSS owns unsuffixed grid aliases required by shared Header and Footer",
+      "passed": true
+    },
+    {
       "check": "Shared CSS owns semantic positioning required by shared Header and Footer",
       "passed": true
     },
@@ -191,13 +199,13 @@
   "files": [
     {
       "path": "css/shared.css",
-      "bytes": 26371,
-      "sha256": "7fbd7672e8ace61454c55b1e82b70288384daf984c7772a5a2e5a0e13a36d097"
+      "bytes": 30190,
+      "sha256": "c185c90c4ef30f760918d1dcdad3d675903101114f6ceabb46793718c43d3219"
     },
     {
       "path": "css/v1.css",
-      "bytes": 28639,
-      "sha256": "9d82f8ce8973e147118b96f56bb15b953889863d149bddd07d0c6339384ef03d"
+      "bytes": 24806,
+      "sha256": "680ed571246f8c8894ae6670ecd9cd1e4cb068dc87005c8a766988132f4e12ea"
     },
     {
       "path": "css/v2.css",

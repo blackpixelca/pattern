@@ -2,7 +2,7 @@
  * Pattern UK version split — V1 compatibility
  * Classification: v1
  * Phase 4 pilot asset. Active only when explicitly referenced by pilot code.
- * Provenance: version-specific active Custom Code 02 rules with explicit marker scoping and de-duplicated V1 grid aliases
+ * Provenance: version-specific active Custom Code 02 rules with explicit marker scoping and shared unsuffixed utility foundation extracted
  */
 
 /* Pattern site-wide custom CSS — V3 transition build
@@ -20,62 +20,6 @@
 /* ========================================================================== */
 /* V1 Custom Code / Base */
 /* ========================================================================== */
-:root:has([data-pattern-version="v1"]) {
-  --site--column-count: 12;
-  --site--width-inner: calc(var(--site--width) - (var(--site--margin) * 2));
-  --site--gutter-total: calc(var(--site--gutter) * (var(--site--column-count) - 1));
-  --site--grid-width: min(var(--site--width-inner), var(--container--full));
-  --container--full: calc(100vw - (var(--site--margin) * 2));
-  --container--small: calc(var(--column-width) * (var(--site--column-count) - 2) - var(--site--gutter));
-  --container--main: calc(var(--column-width) * var(--site--column-count) - var(--site--gutter));
-  --container--main-old: var(--container--main);
-  --column-width: calc((var(--site--grid-width) - var(--site--gutter-total)) / var(--site--column-count) + var(--site--gutter));
-  --column-width--1: calc(var(--column-width) * 1 - var(--site--gutter));
-  --column-width--2: calc(var(--column-width) * 2 - var(--site--gutter));
-  --column-width--3: calc(var(--column-width) * 3 - var(--site--gutter));
-  --column-width--4: calc(var(--column-width) * 4 - var(--site--gutter));
-  --column-width--5: calc(var(--column-width) * 5 - var(--site--gutter));
-  --column-width--6: calc(var(--column-width) * 6 - var(--site--gutter));
-  --column-width--7: calc(var(--column-width) * 7 - var(--site--gutter));
-  --column-width--8: calc(var(--column-width) * 8 - var(--site--gutter));
-  --column-width--9: calc(var(--column-width) * 9 - var(--site--gutter));
-  --column-width--10: calc(var(--column-width) * 10 - var(--site--gutter));
-  --column-width--11: calc(var(--column-width) * 11 - var(--site--gutter));
-  --column-width--12: calc(var(--column-width) * 12 - var(--site--gutter));
-  --column-margin--1: calc(var(--column-width) * 1);
-  --column-margin--2: calc(var(--column-width) * 2);
-  --column-margin--3: calc(var(--column-width) * 3);
-  --column-margin--4: calc(var(--column-width) * 4);
-  --column-margin--5: calc(var(--column-width) * 5);
-  --column-margin--6: calc(var(--column-width) * 6);
-  --column-margin--7: calc(var(--column-width) * 7);
-  --column-margin--8: calc(var(--column-width) * 8);
-  --column-margin--9: calc(var(--column-width) * 9);
-  --column-margin--10: calc(var(--column-width) * 10);
-  --column-margin--11: calc(var(--column-width) * 11);
-  --column-margin--12: calc(var(--column-width) * 12);
-  --breakout-start: [full-start] minmax(0, 1fr) [content-start];
-  --breakout-end: [content-end] minmax(0, 1fr) [full-end];
-  --grid-breakout-single: var(--breakout-start) minmax(0, var(--site--grid-width)) var(--breakout-end);
-  --grid-breakout: var(--breakout-start) repeat(var(--site--column-count), minmax(0, calc((var(--site--grid-width) - var(--site--gutter-total)) / var(--site--column-count)))) var(--breakout-end);
-  --grid-main: repeat(var(--site--column-count), minmax(0, 1fr));
-  --font-weight--inherit: inherit;
-  --font-weight--100: 100;
-  --font-weight--200: 200;
-  --font-weight--300: 300;
-  --font-weight--400: 400;
-  --font-weight--500: 500;
-  --font-weight--600: 600;
-  --font-weight--700: 700;
-  --font-weight--800: 800;
-  --font-weight--900: 900;
-  --text-transform--none: none;
-  --text-transform--uppercase: uppercase;
-  --text-transform--capitalize: capitalize;
-  --text-transform--lowercase: lowercase;
-  --text-transform--inherit: inherit;
-
-}
 
 /* ========================================================================== */
 /* V1 Custom Code / Color */
@@ -551,20 +495,4 @@ padding-bottom: 0.5rem;
   --theme--t1: color-mix(in srgb, var(--_default-2---swatch--white) 5%, var(--_default-2---swatch--transparent));
   --theme--t2: color-mix(in srgb, var(--_default-2---swatch--white) 12%, var(--_default-2---swatch--transparent));
   --theme--t3: color-mix(in srgb, var(--_default-2---swatch--white) 40%, var(--_default-2---swatch--transparent));
-}
-
-/* Unique V1 grid aliases removed from the duplicated V2-priority block. */
-:root:has([data-pattern-version="v1"]) {
-  --grid-1: repeat(1, minmax(0, 1fr));
-  --grid-2: repeat(2, minmax(0, 1fr));
-  --grid-3: repeat(3, minmax(0, 1fr));
-  --grid-4: repeat(4, minmax(0, 1fr));
-  --grid-5: repeat(5, minmax(0, 1fr));
-  --grid-6: repeat(6, minmax(0, 1fr));
-  --grid-7: repeat(7, minmax(0, 1fr));
-  --grid-8: repeat(8, minmax(0, 1fr));
-  --grid-9: repeat(9, minmax(0, 1fr));
-  --grid-10: repeat(10, minmax(0, 1fr));
-  --grid-11: repeat(11, minmax(0, 1fr));
-  --grid-12: repeat(12, minmax(0, 1fr));
 }

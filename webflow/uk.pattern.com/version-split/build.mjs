@@ -74,6 +74,10 @@ function scopeV1(css) {
 function unscopeSharedCompatibility(css) {
   return css
     .replaceAll(
+      ":root:has(body :is(.page_code_wrap, .page_main.cc-v1))",
+      ":root"
+    )
+    .replaceAll(
       ":where(body:has(:is(.page_code_wrap, .page_main.cc-v1))) ",
       ""
     )
@@ -83,20 +87,8 @@ function unscopeSharedCompatibility(css) {
     );
 }
 
-const sharedCss = [
-  banner(
-    "Shared foundation",
-    "shared",
-    "active Custom Code 01, generic compatibility foundation from 02, and shared global helpers from 03"
-  ),
-  lineRange("lumos", 2, 570),
-  unscopeSharedCompatibility(lineRange("v1Bridge", 77, 239)),
-  lineRange("siteOverrides", 66, 77),
-  lineRange("siteOverrides", 93, 100)
-].join("\n\n");
-
-const v1UniqueGrid = `/* Unique V1 grid aliases removed from the duplicated V2-priority block. */
-:root:has([data-pattern-version="v1"]) {
+const sharedGridAliases = `/* Shared unsuffixed grid aliases used by global Header and Footer components. */
+:root {
   --grid-1: repeat(1, minmax(0, 1fr));
   --grid-2: repeat(2, minmax(0, 1fr));
   --grid-3: repeat(3, minmax(0, 1fr));
@@ -111,19 +103,32 @@ const v1UniqueGrid = `/* Unique V1 grid aliases removed from the duplicated V2-p
   --grid-12: repeat(12, minmax(0, 1fr));
 }`;
 
+const sharedCss = [
+  banner(
+    "Shared foundation",
+    "shared",
+    "active Custom Code 01, shared container tokens and generic compatibility foundation from 02, and shared global helpers from 03"
+  ),
+  lineRange("lumos", 2, 570),
+  unscopeSharedCompatibility(lineRange("v1Bridge", 19, 74)),
+  sharedGridAliases,
+  unscopeSharedCompatibility(lineRange("v1Bridge", 77, 239)),
+  lineRange("siteOverrides", 66, 77),
+  lineRange("siteOverrides", 93, 100)
+].join("\n\n");
+
 const v1Css = [
   banner(
     "V1 compatibility",
     "v1",
-    "version-specific active Custom Code 02 rules with explicit marker scoping and de-duplicated V1 grid aliases"
+    "version-specific active Custom Code 02 rules with explicit marker scoping and shared unsuffixed utility foundation extracted"
   ),
   scopeV1(
     [
-      lineRange("v1Bridge", 4, 76),
+      lineRange("v1Bridge", 4, 18),
       lineRange("v1Bridge", 240, 715)
     ].join("\n\n")
-  ),
-  v1UniqueGrid
+  )
 ].join("\n\n");
 
 const v2Css = [
@@ -683,6 +688,19 @@ validation.checks.push(
   {
     check: "V2 CSS excludes the duplicated V1 grid root",
     passed: !files.get("css/v2.css").includes("--site--column-count")
+  },
+  {
+    check: "Shared CSS owns unsuffixed container tokens required by shared Header and Footer",
+    passed:
+      files.get("css/shared.css").includes("--site--column-count: 12;") &&
+      files.get("css/shared.css").includes("--container--main:") &&
+      files.get("css/shared.css").includes("--column-width--12:")
+  },
+  {
+    check: "Shared CSS owns unsuffixed grid aliases required by shared Header and Footer",
+    passed:
+      files.get("css/shared.css").includes("--grid-3:") &&
+      files.get("css/shared.css").includes("--grid-12:")
   },
   {
     check: "Shared CSS owns semantic positioning required by shared Header and Footer",

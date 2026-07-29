@@ -1,8 +1,16 @@
+import { readFile } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 
 const assetRoot =
-  "https://cdn.jsdelivr.net/gh/specterstudio/pattern@uk-version-split-v0.4.0/" +
+  "https://cdn.jsdelivr.net/gh/specterstudio/pattern@uk-version-split-v0.4.2/" +
   "webflow/uk.pattern.com/version-split";
+const useLocalCss = process.env.PHASE4_LOCAL_CSS === "1";
+const packageRoot = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  "../../../webflow/uk.pattern.com/version-split"
+);
 
 async function diagnosticState(page) {
   return page.evaluate(() => {
@@ -10,6 +18,20 @@ async function diagnosticState(page) {
       if (!element) return null;
       const rect = element.getBoundingClientRect();
       const style = getComputedStyle(element);
+      const customProperties = [
+        "--site--column-count",
+        "--site--width",
+        "--site--width-inner",
+        "--site--margin",
+        "--site--gutter",
+        "--site--gutter-total",
+        "--site--grid-width",
+        "--column-width",
+        "--container--full",
+        "--container--small",
+        "--container--main",
+        "--container--main-old"
+      ];
       return {
         tag: element.tagName.toLowerCase(),
         className:
@@ -24,14 +46,24 @@ async function diagnosticState(page) {
         },
         display: style.display,
         position: style.position,
+        width: style.width,
+        maxWidth: style.maxWidth,
+        minWidth: style.minWidth,
         transform: style.transform,
         overflow: style.overflow,
         overflowX: style.overflowX,
-        overflowY: style.overflowY
+        overflowY: style.overflowY,
+        customProperties: Object.fromEntries(
+          customProperties.map((property) => [
+            property,
+            style.getPropertyValue(property).trim()
+          ])
+        )
       };
     }
 
     const accent = document.querySelector(".footer_accent");
+    const footer = document.querySelector(".footer_wrap");
     const ancestors = [];
     let current = accent;
     while (current) {
@@ -43,14 +75,36 @@ async function diagnosticState(page) {
       viewport: innerWidth,
       scrollWidth: document.documentElement.scrollWidth,
       bodyScrollWidth: document.body.scrollWidth,
-      accentAncestors: ancestors
+      accentAncestors: ancestors,
+      footer: describe(footer),
+      footerContainer: describe(
+        document.querySelector(".footer_contain.u-container")
+      ),
+      footerChildren: footer
+        ? Array.from(footer.children).map(describe)
+        : [],
+      marketoForms: Array.from(document.querySelectorAll(".mktoForm")).map(
+        (form) => ({
+          id: form.id,
+          state: describe(form),
+          rows: Array.from(form.querySelectorAll(".mktoFormRow"))
+            .slice(0, 8)
+            .map(describe)
+        })
+      ),
+      tallestFooterDescendants: footer
+        ? Array.from(footer.querySelectorAll("*"))
+            .map(describe)
+            .filter(Boolean)
+            .sort((a, b) => b.rect.height - a.rect.height)
+            .slice(0, 12)
+        : []
     };
   });
 }
 
 async function addCss(page) {
-  await page.evaluate(
-    async ({ assetRoot }) => {
+  await page.evaluate(() => {
       document.querySelectorAll(".page_code_wrap").forEach((element) => {
         element.remove();
       });
@@ -60,6 +114,17 @@ async function addCss(page) {
         document.body;
       root.setAttribute("data-pattern-version", "v2");
       root.setAttribute("data-pattern-asset-pilot", "phase4");
+  });
+
+  if (useLocalCss) {
+    for (const path of ["css/shared.css", "css/v2.css", "css/features.css"]) {
+      await page.addStyleTag({
+        content: await readFile(resolve(packageRoot, path), "utf8")
+      });
+    }
+  } else {
+    await page.evaluate(
+      async ({ assetRoot }) => {
       for (const path of ["css/shared.css", "css/v2.css", "css/features.css"]) {
         await new Promise((resolve, reject) => {
           const link = document.createElement("link");
@@ -70,9 +135,10 @@ async function addCss(page) {
           document.head.appendChild(link);
         });
       }
-    },
-    { assetRoot }
-  );
+      },
+      { assetRoot }
+    );
+  }
   await page.waitForTimeout(1000);
 }
 
@@ -99,8 +165,7 @@ async function addLoader(page) {
 const browser = await chromium.launch({ headless: true });
 try {
   for (const viewport of [
-    { name: "desktop", width: 1440, height: 1200 },
-    { name: "mobile", width: 479, height: 900 }
+    { name: "desktop", width: 1440, height: 1200 }
   ]) {
     const page = await browser.newPage({ viewport });
     await page.goto(

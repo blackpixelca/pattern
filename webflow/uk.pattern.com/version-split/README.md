@@ -28,9 +28,11 @@ time.
 
 - `.page_code_wrap` is not a version signal anywhere in the generated V1 source.
 - V1 accepts all three mapped marker locations: Body, `.page_main`, and `.page_wrap`.
-- The V1 grid from the old V2-priority block was de-duplicated. Only its unique `--grid-1` through `--grid-12` aliases were retained.
+- The unsuffixed `--grid-1` through `--grid-12` aliases remain Shared because
+  the global Header and Footer consume them.
 - Marketo is a shared feature, not a V1 or V2 asset.
-- The shared Header and Footer use unsuffixed utility classes, so their required foundation cannot be moved wholesale into V1.
+- The shared Header and Footer use unsuffixed utility classes, so their shared
+  container tokens and compatibility foundation remain in Shared rather than V1.
 - Conditional Visibility may later select component markup, but it must not load CSS or JavaScript.
 
 ## Build and verification
@@ -48,10 +50,10 @@ Current validation:
 - 24 generated files
 - 18 CSS files
 - 4 JavaScript files
-- 46 of 46 structural checks passed
+- 48 of 48 structural checks passed
 - 18 of 18 CSS files parsed in Chromium
 - 468 CSSOM rules parsed
-- V1 marker behavior verified on Body, `.page_main`, and `.page_wrap`
+- Shared container-token and grid-alias behavior plus V1-only type aliases verified
 - V2 Content Wrapper alignment verified only with a V2 marker
 - V1 and V2 pilot runtime selection verified
 - Loader inactivity without the explicit Phase 4 pilot marker verified

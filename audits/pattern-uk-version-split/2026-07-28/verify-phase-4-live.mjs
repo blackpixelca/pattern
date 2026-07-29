@@ -5,7 +5,7 @@ import { chromium } from "playwright";
 const repoRoot = resolve(import.meta.dirname, "../../..");
 const outputRoot = resolve(repoRoot, "output/playwright/pattern-uk-phase4");
 const assetRoot =
-  "https://cdn.jsdelivr.net/gh/specterstudio/pattern@uk-version-split-v0.4.0/" +
+  "https://cdn.jsdelivr.net/gh/specterstudio/pattern@uk-version-split-v0.4.2/" +
   "webflow/uk.pattern.com/version-split";
 
 const viewports = [
@@ -172,6 +172,13 @@ async function collect(page) {
       footer: toRect(
         first(["footer", ".footer_wrap", '[class*="footer"]'])
       ),
+      footerContainer: toRect(
+        first([
+          ".footer_contain.u-container",
+          ".footer_contain.u-container-2",
+          ".footer_contain"
+        ])
+      ),
       centerWrapper: toRect(centerWrapper),
       containers: summarize(
         ".u-container, .u-container-2, .container, [class*='_container']",
@@ -187,7 +194,10 @@ async function collect(page) {
       })),
       marketo: {
         forms: document.querySelectorAll(".mktoForm").length,
-        renderedForms: document.querySelectorAll('.mktoForm[id^="mktoForm_"]').length
+        renderedForms: document.querySelectorAll('.mktoForm[id^="mktoForm_"]').length,
+        firstRendered: toRect(
+          document.querySelector('.mktoForm[id^="mktoForm_"]')
+        )
       }
     };
   });
@@ -320,6 +330,14 @@ async function inspectState(browser, target, viewport) {
       pageMain: rectDelta(baseline.pageMain, split.pageMain),
       header: rectDelta(baseline.header, split.header),
       footer: rectDelta(baseline.footer, split.footer),
+      footerContainer: rectDelta(
+        baseline.footerContainer,
+        split.footerContainer
+      ),
+      marketoFirstRendered: rectDelta(
+        baseline.marketo.firstRendered,
+        split.marketo.firstRendered
+      ),
       centerWrapper: rectDelta(baseline.centerWrapper, split.centerWrapper)
     },
     consoleErrors,
@@ -396,8 +414,37 @@ try {
       {
         check: `${result.page} ${result.viewport}: no horizontal overflow`,
         passed: result.split.viewport.horizontalOverflow <= 1
+      },
+      {
+        check: `${result.page} ${result.viewport}: shared footer geometry preserved`,
+        passed:
+          Math.abs(result.delta.footer?.x || 0) <= 1 &&
+          Math.abs(result.delta.footer?.width || 0) <= 1 &&
+          Math.abs(result.delta.footer?.height || 0) <= 1 &&
+          Math.abs(result.delta.footerContainer?.x || 0) <= 1 &&
+          Math.abs(result.delta.footerContainer?.width || 0) <= 1 &&
+          Math.abs(result.delta.footerContainer?.height || 0) <= 1
+      },
+      {
+        check: `${result.page} ${result.viewport}: shared container tokens active`,
+        passed: result.split.columns === "12"
+      },
+      {
+        check: `${result.page} ${result.viewport}: no console errors`,
+        passed: result.consoleErrors.length === 0
       }
     );
+
+    if (result.baseline.marketo.firstRendered) {
+      checks.push({
+        check: `${result.page} ${result.viewport}: rendered Marketo form geometry preserved`,
+        passed:
+          result.split.marketo.renderedForms ===
+            result.baseline.marketo.renderedForms &&
+          Math.abs(result.delta.marketoFirstRendered?.width || 0) <= 1 &&
+          Math.abs(result.delta.marketoFirstRendered?.height || 0) <= 1
+      });
+    }
 
     if (result.version === "v1") {
       checks.push({
@@ -409,10 +456,6 @@ try {
     }
 
     if (result.version === "v2") {
-      checks.push({
-        check: `${result.page} ${result.viewport}: V1 columns inactive`,
-        passed: result.split.columns === ""
-      });
       if (result.split.centerWrapper) {
         checks.push({
           check: `${result.page} ${result.viewport}: V2 content wrapper centered`,
