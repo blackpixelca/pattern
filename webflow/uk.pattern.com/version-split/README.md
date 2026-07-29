@@ -32,7 +32,11 @@ time.
   the global Header and Footer consume them.
 - Marketo is a shared feature, not a V1 or V2 asset.
 - The shared Header and Footer use unsuffixed utility classes, so their shared
-  container tokens and compatibility foundation remain in Shared rather than V1.
+  container tokens, grid aliases, fluid type and margin aliases, and
+  compatibility foundation remain in Shared rather than V1.
+- The optional `.page_main.cc-v1` production-fidelity boundary remains
+  opt-in. A page's version marker selects V1 assets but does not add that combo
+  class's visual overrides.
 - Conditional Visibility may later select component markup, but it must not load CSS or JavaScript.
 
 ## Build and verification
@@ -50,7 +54,7 @@ Current validation:
 - 24 generated files
 - 18 CSS files
 - 4 JavaScript files
-- 48 of 48 structural checks passed
+- 50 of 50 structural checks passed
 - 18 of 18 CSS files parsed in Chromium
 - 468 CSSOM rules parsed
 - Shared container-token and grid-alias behavior plus V1-only type aliases verified

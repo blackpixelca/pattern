@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 
 const assetRoot =
-  "https://cdn.jsdelivr.net/gh/specterstudio/pattern@uk-version-split-v0.4.2/" +
+  "https://cdn.jsdelivr.net/gh/specterstudio/pattern@uk-version-split-v0.4.3/" +
   "webflow/uk.pattern.com/version-split";
 const useLocalCss = process.env.PHASE4_LOCAL_CSS === "1";
 const packageRoot = resolve(

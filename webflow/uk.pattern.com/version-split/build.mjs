@@ -63,11 +63,6 @@ function scopeV1(css) {
     .replaceAll(
       "body:has(:is(.page_code_wrap, .page_main.cc-v1))",
       'body:is([data-pattern-version="v1"], :has([data-pattern-version="v1"]))'
-    )
-    .replaceAll(".page_main.cc-v1", '[data-pattern-version="v1"]')
-    .replace(
-      "Apply the cc-v1 combo class to the V1 page's .page_main element.",
-      'Apply data-pattern-version="v1" to the mapped page root.'
     );
 }
 
@@ -103,6 +98,29 @@ const sharedGridAliases = `/* Shared unsuffixed grid aliases used by global Head
   --grid-12: repeat(12, minmax(0, 1fr));
 }`;
 
+const sharedFluidLegacyAliases = `/* Shared fluid aliases used by unsuffixed global Header and Footer utilities. */
+:root {
+  --type-size--d1: clamp(3.25rem, 1.7642857142857142rem + 6.095238095238095vw, 7.25rem);
+  --type-size--d2: clamp(2.9375rem, 1.7535714285714286rem + 4.857142857142857vw, 6.125rem);
+  --type-size--d3: clamp(2.6875rem, 1.7357142857142858rem + 3.9047619047619047vw, 5.25rem);
+  --type-size--h1: clamp(2.4375rem, 1.6830357142857142rem + 3.0952380952380953vw, 4.46875rem);
+  --type-size--h2: clamp(2.1875rem, 1.5839285714285714rem + 2.4761904761904763vw, 3.8125rem);
+  --type-size--h3: clamp(2rem, 1.5357142857142858rem + 1.9047619047619049vw, 3.25rem);
+  --type-size--h4: clamp(1.8125rem, 1.4642857142857142rem + 1.4285714285714286vw, 2.75rem);
+  --type-size--h5: clamp(1.65rem, 1.3807142857142858rem + 1.1047619047619048vw, 2.375rem);
+  --type-size--h6: clamp(1.5rem, 1.3142857142857143rem + 0.7619047619047619vw, 2rem);
+  --type-size--text-xxlarge: clamp(1.5rem, 1.4303571428571429rem + 0.2857142857142857vw, 1.6875rem);
+  --type-size--text-xlarge: clamp(1.25rem, 1.2035714285714285rem + 0.19047619047619047vw, 1.375rem);
+  --type-size--text-large: clamp(1.1rem, 1.090714285714286rem + 0.03809523809523796vw, 1.125rem);
+  --type-size--text-main: clamp(1rem, 1rem + 0vw, 1rem);
+  --type-size--text-small: clamp(0.875rem, 0.875rem + 0vw, 0.875rem);
+  --type-size--overline-large: clamp(1rem, 1rem + 0vw, 1rem);
+  --type-size--oevrline-main: clamp(0.875rem, 0.875rem + 0vw, 0.875rem);
+  --type-size--overline-small: clamp(0.75rem, 0.75rem + 0vw, 0.75rem);
+  --site--margin: clamp(1.5rem, 0.38571428571428573rem + 4.571428571428571vw, 4.5rem);
+  --_buttons---button--font-size: clamp(0.8125rem, 0.7892857142857143rem + 0.09523809523809523vw, 0.875rem);
+}`;
+
 const sharedCss = [
   banner(
     "Shared foundation",
@@ -112,6 +130,7 @@ const sharedCss = [
   lineRange("lumos", 2, 570),
   unscopeSharedCompatibility(lineRange("v1Bridge", 19, 74)),
   sharedGridAliases,
+  sharedFluidLegacyAliases,
   unscopeSharedCompatibility(lineRange("v1Bridge", 77, 239)),
   lineRange("siteOverrides", 66, 77),
   lineRange("siteOverrides", 93, 100)
@@ -126,7 +145,8 @@ const v1Css = [
   scopeV1(
     [
       lineRange("v1Bridge", 4, 18),
-      lineRange("v1Bridge", 240, 715)
+      lineRange("v1Bridge", 240, 570),
+      lineRange("v1Bridge", 595, 715)
     ].join("\n\n")
   )
 ].join("\n\n");
@@ -701,6 +721,28 @@ validation.checks.push(
     passed:
       files.get("css/shared.css").includes("--grid-3:") &&
       files.get("css/shared.css").includes("--grid-12:")
+  },
+  {
+    check: "Shared CSS owns fluid aliases required by shared Header and Footer",
+    passed:
+      files.get("css/shared.css").includes("--type-size--h6:") &&
+      files.get("css/shared.css").includes(
+        "--site--margin: clamp(1.5rem, 0.38571428571428573rem + 4.571428571428571vw, 4.5rem);"
+      ) &&
+      files.get("css/shared.css").includes(
+        "--_buttons---button--font-size:"
+      ) &&
+      !files.get("css/v1.css").includes(
+        "--type-size--h6: clamp(1.5rem, 1.3142857142857143rem + 0.7619047619047619vw, 2rem);"
+      )
+  },
+  {
+    check: "Optional V1 production-fidelity boundary still requires cc-v1",
+    passed:
+      files.get("css/v1.css").includes(".page_main.cc-v1 {") &&
+      !files.get("css/v1.css").includes(
+        '[data-pattern-version="v1"] {\n  --site--column-count: 12;'
+      )
   },
   {
     check: "Shared CSS owns semantic positioning required by shared Header and Footer",

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-29T00:59:38.276Z",
+  "generatedAt": "2026-07-29T01:20:48.932Z",
   "active": true,
   "pilotOnly": true,
   "checks": [
@@ -172,6 +172,14 @@
       "passed": true
     },
     {
+      "check": "Shared CSS owns fluid aliases required by shared Header and Footer",
+      "passed": true
+    },
+    {
+      "check": "Optional V1 production-fidelity boundary still requires cc-v1",
+      "passed": true
+    },
+    {
       "check": "Shared CSS owns semantic positioning required by shared Header and Footer",
       "passed": true
     },
@@ -199,13 +207,13 @@
   "files": [
     {
       "path": "css/shared.css",
-      "bytes": 30190,
-      "sha256": "c185c90c4ef30f760918d1dcdad3d675903101114f6ceabb46793718c43d3219"
+      "bytes": 31930,
+      "sha256": "5d1712e50e95808f1042a6098856df726c558852d02a2c4a897e3e0726c61dd7"
     },
     {
       "path": "css/v1.css",
-      "bytes": 24806,
-      "sha256": "680ed571246f8c8894ae6670ecd9cd1e4cb068dc87005c8a766988132f4e12ea"
+      "bytes": 22816,
+      "sha256": "0685b3615337e228f4fc7f7f3564115ab21db841d51da0144e23afd8fa14e91c"
     },
     {
       "path": "css/v2.css",

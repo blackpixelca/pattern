@@ -1,11 +1,16 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { chromium } from "playwright";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
 const outputRoot = resolve(repoRoot, "output/playwright/pattern-uk-phase4");
+const packageRoot = resolve(
+  repoRoot,
+  "webflow/uk.pattern.com/version-split"
+);
+const useLocalCss = process.env.PHASE4_LOCAL_CSS === "1";
 const assetRoot =
-  "https://cdn.jsdelivr.net/gh/specterstudio/pattern@uk-version-split-v0.4.2/" +
+  "https://cdn.jsdelivr.net/gh/specterstudio/pattern@uk-version-split-v0.4.3/" +
   "webflow/uk.pattern.com/version-split";
 
 const viewports = [
@@ -139,7 +144,9 @@ async function collect(page) {
       );
     });
     const splitLinks = Array.from(
-      document.querySelectorAll('link[data-pattern-version-split="phase4"]')
+      document.querySelectorAll(
+        '[data-pattern-version-split="phase4"][data-pattern-split-asset]'
+      )
     );
 
     return {
@@ -157,7 +164,7 @@ async function collect(page) {
       legacyBridgeCount: document.querySelectorAll(".page_code_wrap").length,
       splitAssets: splitLinks.map((link) => ({
         asset: link.getAttribute("data-pattern-split-asset"),
-        href: link.href,
+        href: link.href || "inline-local-verification",
         loaded: Boolean(link.sheet)
       })),
       loaderState: window.__patternVersionSplit || null,
@@ -204,45 +211,64 @@ async function collect(page) {
 }
 
 async function injectSplit(page, version) {
-  await page.evaluate(
-    async ({ assetRoot, version }) => {
-      document.querySelectorAll(".page_code_wrap").forEach((element) => {
-        element.remove();
+  await page.evaluate((pageVersion) => {
+    document.querySelectorAll(".page_code_wrap").forEach((element) => {
+      element.remove();
+    });
+
+    const root =
+      document.querySelector(`[data-pattern-version="${pageVersion}"]`) ||
+      document.querySelector(".page_main") ||
+      document.body;
+    root.setAttribute("data-pattern-version", pageVersion);
+    root.setAttribute("data-pattern-asset-pilot", "phase4");
+  }, version);
+
+  const assets = [
+    { name: "shared", path: "css/shared.css" },
+    { name: version, path: `css/${version}.css` },
+    { name: "features", path: "css/features.css" }
+  ];
+
+  if (useLocalCss) {
+    for (const asset of assets) {
+      const style = await page.addStyleTag({
+        content: await readFile(resolve(packageRoot, asset.path), "utf8")
       });
+      await style.evaluate((element, assetName) => {
+        element.dataset.patternVersionSplit = "phase4";
+        element.dataset.patternSplitAsset = assetName;
+      }, asset.name);
+    }
+  } else {
+    await page.evaluate(
+      async ({ assetRoot, assets }) => {
+        await Promise.all(
+          assets.map(
+            (asset) =>
+              new Promise((resolve, reject) => {
+                const link = document.createElement("link");
+                link.rel = "stylesheet";
+                link.href = `${assetRoot}/${asset.path}`;
+                link.dataset.patternVersionSplit = "phase4";
+                link.dataset.patternSplitAsset = asset.name;
+                link.addEventListener("load", resolve, { once: true });
+                link.addEventListener(
+                  "error",
+                  () => reject(new Error(`Unable to load ${asset.name}`)),
+                  { once: true }
+                );
+                document.head.appendChild(link);
+              })
+          )
+        );
+      },
+      { assetRoot, assets }
+    );
+  }
 
-      const root =
-        document.querySelector(`[data-pattern-version="${version}"]`) ||
-        document.querySelector(".page_main") ||
-        document.body;
-      root.setAttribute("data-pattern-version", version);
-      root.setAttribute("data-pattern-asset-pilot", "phase4");
-
-      const assets = [
-        { name: "shared", path: "css/shared.css" },
-        { name: version, path: `css/${version}.css` },
-        { name: "features", path: "css/features.css" }
-      ];
-
-      await Promise.all(
-        assets.map(
-          (asset) =>
-            new Promise((resolve, reject) => {
-              const link = document.createElement("link");
-              link.rel = "stylesheet";
-              link.href = `${assetRoot}/${asset.path}`;
-              link.dataset.patternVersionSplit = "phase4";
-              link.dataset.patternSplitAsset = asset.name;
-              link.addEventListener("load", resolve, { once: true });
-              link.addEventListener(
-                "error",
-                () => reject(new Error(`Unable to load ${asset.name}`)),
-                { once: true }
-              );
-              document.head.appendChild(link);
-            })
-        )
-      );
-
+  await page.evaluate(
+    async ({ assetRoot }) => {
       await new Promise((resolve, reject) => {
         const timeout = setTimeout(
           () => reject(new Error("Phase 4 loader timed out")),
@@ -271,7 +297,7 @@ async function injectSplit(page, version) {
         document.body.appendChild(script);
       });
     },
-    { assetRoot, version }
+    { assetRoot }
   );
 
   await page.waitForTimeout(1500);
@@ -470,6 +496,7 @@ try {
   const report = {
     generatedAt: new Date().toISOString(),
     assetRoot,
+    localCss: useLocalCss,
     publishedWebflow: false,
     viewports,
     checks,
