@@ -75,7 +75,7 @@
     },
     {
       "id": "accordion",
-      "selector": "[class*='accordion']",
+      "selector": "[data-accordion-list], [class*=\"accordion_list\"]",
       "location": "footer",
       "url": "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/interaction/accordion.js"
     },

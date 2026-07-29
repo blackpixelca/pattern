@@ -6,6 +6,8 @@ import { chromium } from "playwright";
 
 const packageRoot = dirname(fileURLToPath(import.meta.url));
 const cssRoot = join(packageRoot, "css");
+const accordionUrl =
+  "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/interaction/accordion.js";
 
 async function listCssFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -57,6 +59,19 @@ const routeDocuments = {
   "/duplicate-shared": testDocument(
     '<main data-pattern-version="v1"></main>',
     '<script src="/js/shared.js"></script>'
+  ),
+  "/accordion-visual": testDocument(
+    '<main data-pattern-version="v1"><div class="accordion_wrap"></div></main>'
+  ),
+  "/accordion-data-list": testDocument(
+    '<main data-pattern-version="v1"><div data-accordion-list></div></main>'
+  ),
+  "/accordion-legacy-list": testDocument(
+    '<main data-pattern-version="v1"><div class="legacy_accordion_list"></div></main>'
+  ),
+  "/accordion-duplicate": testDocument(
+    '<main data-pattern-version="v1"><div data-accordion-list class="accordion_list"></div></main>',
+    `<script src="${accordionUrl}"></script>`
   )
 };
 
@@ -154,6 +169,36 @@ try {
     return state;
   }
 
+  async function accordionState(path) {
+    const page = await browser.newPage();
+    let requestCount = 0;
+
+    await page.route("**/accordion.js", async (route) => {
+      requestCount += 1;
+      await route.fulfill({
+        contentType: "text/javascript; charset=utf-8",
+        body:
+          "window.__accordionLoadCount = " +
+          "(window.__accordionLoadCount || 0) + 1;"
+      });
+    });
+
+    await page.goto(`${origin}${path}`, { waitUntil: "networkidle" });
+    const result = await page.evaluate(() => ({
+      state: window.__patternVersionSplit || null,
+      loadCount: window.__accordionLoadCount || 0,
+      scriptCount: document.querySelectorAll(
+        'script[src*="/accordion.js"]'
+      ).length
+    }));
+    await page.close();
+
+    return {
+      ...result,
+      requestCount
+    };
+  }
+
   const [
     loaderV1,
     loaderV2,
@@ -170,6 +215,18 @@ try {
     loaderState("/invalid"),
     loaderState("/conflict"),
     loaderState("/duplicate-shared")
+  ]);
+
+  const [
+    accordionVisual,
+    accordionDataList,
+    accordionLegacyList,
+    accordionDuplicate
+  ] = await Promise.all([
+    accordionState("/accordion-visual"),
+    accordionState("/accordion-data-list"),
+    accordionState("/accordion-legacy-list"),
+    accordionState("/accordion-duplicate")
   ]);
 
   const [
@@ -225,7 +282,7 @@ try {
       check: "V1 marker loads Shared and V1 runtimes without a pilot marker",
       passed:
         loaderV1?.phase === 5 &&
-        loaderV1?.release === "0.5.1" &&
+        loaderV1?.release === "0.5.2" &&
         loaderV1?.status === "ready" &&
         loaderV1?.version === "v1" &&
         loaderV1.loaded.includes("shared-runtime") &&
@@ -236,7 +293,7 @@ try {
       check: "V2 marker loads Shared and V2 runtimes without a pilot marker",
       passed:
         loaderV2?.phase === 5 &&
-        loaderV2?.release === "0.5.1" &&
+        loaderV2?.release === "0.5.2" &&
         loaderV2?.status === "ready" &&
         loaderV2?.version === "v2" &&
         loaderV2.loaded.includes("shared-runtime") &&
@@ -270,11 +327,11 @@ try {
         loaderDuplicate?.loaded.includes("v1-runtime")
     },
     {
-      check: "Designer components reference the immutable 0.5.1 release",
+      check: "Designer components reference the immutable 0.5.2 release",
       passed:
-        sharedComponent.includes("@uk-version-split-v0.5.1/") &&
-        v1Component.includes("@uk-version-split-v0.5.1/") &&
-        v2Component.includes("@uk-version-split-v0.5.1/")
+        sharedComponent.includes("@uk-version-split-v0.5.2/") &&
+        v1Component.includes("@uk-version-split-v0.5.2/") &&
+        v2Component.includes("@uk-version-split-v0.5.2/")
     },
     {
       check: "Permanent loader contains no Phase 4 pilot gate",
@@ -292,6 +349,39 @@ try {
         !ctaInject?.selector &&
         loaderSource.includes("feature.requiredSelectors.every") &&
         !loaderSource.includes("\"selector\": \"[data-cta-inject], [class*='cta']\"")
+    },
+    {
+      check: "Visual accordion wrapper does not load accordion runtime",
+      passed:
+        accordionVisual.requestCount === 0 &&
+        accordionVisual.loadCount === 0 &&
+        accordionVisual.scriptCount === 0 &&
+        !accordionVisual.state?.loaded.includes("accordion")
+    },
+    {
+      check: "Data accordion list loads one accordion runtime",
+      passed:
+        accordionDataList.requestCount === 1 &&
+        accordionDataList.loadCount === 1 &&
+        accordionDataList.scriptCount === 1 &&
+        accordionDataList.state?.loaded.includes("accordion")
+    },
+    {
+      check: "Legacy accordion_list class loads one accordion runtime",
+      passed:
+        accordionLegacyList.requestCount === 1 &&
+        accordionLegacyList.loadCount === 1 &&
+        accordionLegacyList.scriptCount === 1 &&
+        accordionLegacyList.state?.loaded.includes("accordion")
+    },
+    {
+      check: "Existing accordion runtime is not injected twice",
+      passed:
+        accordionDuplicate.requestCount === 1 &&
+        accordionDuplicate.loadCount === 1 &&
+        accordionDuplicate.scriptCount === 1 &&
+        accordionDuplicate.state?.skipped.includes("accordion") &&
+        !accordionDuplicate.state?.loaded.includes("accordion")
     }
   ];
 
@@ -307,6 +397,10 @@ try {
     loaderInvalid,
     loaderConflict,
     loaderDuplicate,
+    accordionVisual,
+    accordionDataList,
+    accordionLegacyList,
+    accordionDuplicate,
     checks,
     failures: checks.filter(({ passed }) => !passed).length
   };

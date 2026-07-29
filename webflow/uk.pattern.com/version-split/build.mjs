@@ -12,8 +12,8 @@ const auditRoot = resolve(
 
 const release = Object.freeze({
   phase: 5,
-  version: "0.5.1",
-  tag: "uk-version-split-v0.5.1"
+  version: "0.5.2",
+  tag: "uk-version-split-v0.5.2"
 });
 
 const cdnRoot = `https://cdn.jsdelivr.net/gh/specterstudio/pattern@${release.tag}/webflow/uk.pattern.com/version-split`;
@@ -448,7 +448,7 @@ const externalAssets = {
     },
     {
       id: "accordion",
-      selector: "[class*='accordion']",
+      selector: '[data-accordion-list], [class*="accordion_list"]',
       location: "footer",
       url: "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/interaction/accordion.js"
     },

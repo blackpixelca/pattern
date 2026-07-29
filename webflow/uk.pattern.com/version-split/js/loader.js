@@ -31,7 +31,7 @@
   function block(reason) {
     global.__patternVersionSplit = {
       phase: 5,
-      release: "0.5.1",
+      release: "0.5.2",
       status: "blocked",
       started: false,
       version: null,
@@ -44,7 +44,7 @@
     document.dispatchEvent(new CustomEvent("pattern:version-split-blocked", {
       detail: {
         phase: 5,
-        release: "0.5.1",
+        release: "0.5.2",
         reason: reason,
         markerValues: markerValues.slice()
       }
@@ -71,7 +71,7 @@
   var packageRoot = new URL("../", currentScript.src);
   var state = global.__patternVersionSplit = {
     phase: 5,
-    release: "0.5.1",
+    release: "0.5.2",
     status: "loading",
     started: true,
     version: version,
@@ -152,7 +152,7 @@
   },
   {
     "id": "accordion",
-    "selector": "[class*='accordion']",
+    "selector": "[data-accordion-list], [class*=\"accordion_list\"]",
     "url": "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/interaction/accordion.js"
   },
   {
@@ -219,7 +219,7 @@
       document.dispatchEvent(new CustomEvent("pattern:version-split-ready", {
         detail: {
           phase: 5,
-          release: "0.5.1",
+          release: "0.5.2",
           status: state.status,
           version: version,
           loaded: state.loaded.slice(),
