@@ -71,13 +71,26 @@ function scopeV1(css) {
     );
 }
 
+function unscopeSharedCompatibility(css) {
+  return css
+    .replaceAll(
+      ":where(body:has(:is(.page_code_wrap, .page_main.cc-v1))) ",
+      ""
+    )
+    .replaceAll(
+      "body:has(:is(.page_code_wrap, .page_main.cc-v1))",
+      "body"
+    );
+}
+
 const sharedCss = [
   banner(
     "Shared foundation",
     "shared",
-    "active Custom Code 01 plus shared global helpers from active Custom Code 03"
+    "active Custom Code 01, generic compatibility foundation from 02, and shared global helpers from 03"
   ),
   lineRange("lumos", 2, 570),
+  unscopeSharedCompatibility(lineRange("v1Bridge", 77, 239)),
   lineRange("siteOverrides", 66, 77),
   lineRange("siteOverrides", 93, 100)
 ].join("\n\n");
@@ -102,9 +115,14 @@ const v1Css = [
   banner(
     "V1 compatibility",
     "v1",
-    "active Custom Code 02 with explicit marker scoping and de-duplicated V1 grid aliases"
+    "version-specific active Custom Code 02 rules with explicit marker scoping and de-duplicated V1 grid aliases"
   ),
-  scopeV1(lineRange("v1Bridge", 4, 715)),
+  scopeV1(
+    [
+      lineRange("v1Bridge", 4, 76),
+      lineRange("v1Bridge", 240, 715)
+    ].join("\n\n")
+  ),
   v1UniqueGrid
 ].join("\n\n");
 
@@ -665,6 +683,20 @@ validation.checks.push(
   {
     check: "V2 CSS excludes the duplicated V1 grid root",
     passed: !files.get("css/v2.css").includes("--site--column-count")
+  },
+  {
+    check: "Shared CSS owns semantic positioning required by shared Header and Footer",
+    passed:
+      files.get("css/shared.css").includes("section,") &&
+      files.get("css/shared.css").includes("header,") &&
+      files.get("css/shared.css").includes("footer {") &&
+      files.get("css/shared.css").includes("position: relative;")
+  },
+  {
+    check: "V1 CSS excludes the extracted generic compatibility foundation",
+    passed: !files
+      .get("css/v1.css")
+      .includes('[data-pattern-version="v1"]))) footer')
   },
   {
     check: "Shared Marketo feature keeps rendered-form scope",

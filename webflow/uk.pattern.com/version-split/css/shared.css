@@ -2,7 +2,7 @@
  * Pattern UK version split — Shared foundation
  * Classification: shared
  * Phase 4 pilot asset. Active only when explicitly referenced by pilot code.
- * Provenance: active Custom Code 01 plus shared global helpers from active Custom Code 03
+ * Provenance: active Custom Code 01, generic compatibility foundation from 02, and shared global helpers from 03
  */
 
 :root {
@@ -574,6 +574,169 @@
     [class*="u-all-unset-xsmall"] { all: unset; }
     [class*="slider_offset"] { --slide-count: var(--xs); }
   }
+
+body {
+	font-weight: var(--_typography---font--primary-regular);
+}
+video.wf-empty {
+	padding: 0;
+}
+section,
+header,
+footer {
+	position: relative;
+}
+[class*="u-text-style-"] > :where(h1,h2,h3,h4,h5,h6,p,blockquote) {
+	font-family: inherit;
+	font-size: inherit;
+	font-weight: inherit;
+	line-height: inherit;
+	letter-spacing: inherit;
+	text-transform: inherit;
+	text-wrap: inherit;
+	margin-top: inherit;
+	margin-bottom: inherit;
+}
+:not(
+	.u-margin-trim-off, 
+	.u-block-gap, 
+	.w-background-video, 
+	.article-rich-text > *
+) > :not(:not(.w-condition-invisible) ~ :not(.w-condition-invisible)) {
+	margin-top: 0;
+}
+:not(.u-margin-trim-off, .u-block-gap, .w-background-video, .article-rich-text > *) > :not(:has(~ :not(.w-condition-invisible))) {
+	margin-bottom: 0;
+}
+
+.u-hide-if-empty:empty,
+.u-hide-if-empty:not(:has(> :not(.w-condition-invisible))),
+.u-hide-if-empty-cms:not(:has(.w-dyn-item)),
+.w-richtext[class*="u-text-style-"] > :not(h1,h2,h3,h4,h5,h6,p,blockquote,ul,ol,span),
+.u-embed-js,
+.u-embed-css {
+	display: none !important;
+}
+
+.u-line-clamp-1,
+.u-line-clamp-2,
+.u-line-clamp-3,
+.u-line-clamp-4 {
+	-webkit-line-clamp: 1;
+	-webkit-box-orient: vertical;
+}
+.u-line-clamp-2 { -webkit-line-clamp: 2; }
+.u-line-clamp-3 { -webkit-line-clamp: 3; }
+.u-line-clamp-4 { -webkit-line-clamp: 4; }
+
+[tabindex] {
+	outline-offset: var(--_default-2---focus--offset-outer);
+}
+
+.w-checkbox-input--inputType-custom {
+	outline-offset: var(--_default-2---focus--offset-outer);
+}
+
+.w-form-formradioinput--inputType-custom {
+	outline-offset: var(--_default-2---focus--offset-outer);
+}
+.w-checkbox:has(:focus-visible) .w-checkbox-input--inputType-custom {
+	outline-color: var(--theme--text);
+	outline-width: var(--_default-2---focus--width);
+	outline-style: solid;
+}
+.w-radio:has(:focus-visible) .w-form-formradioinput--inputType-custom {
+	outline-color: var(--theme--text);
+	outline-width: var(--_default-2---focus--width);
+	outline-style: solid;
+}
+.w-checkbox-input--inputType-custom.w--redirected-focus,
+.w-form-formradioinput--inputType-custom.w--redirected-focus {
+	box-shadow: none;
+}
+
+.u-block-gap {
+	--gap: var(--space--1);
+	--gap-x: var(--gap);
+	--gap-y: var(--gap);
+}
+.u-block-gap > * {
+	margin-inline: calc(var(--gap-x) / 2);
+	margin-top: var(--gap-y);
+	vertical-align: inherit;
+}
+:where(.u-block-gap > *) {
+	display: inline-block;
+}
+.u-block-gap::before {
+	content: "";
+	display: block;
+	margin-bottom: calc(var(--gap-y) * -1);
+}
+
+.u-block-gap-vertical {
+	--gap: 0;
+	--margin: var(--gap);
+}
+.u-block-gap-vertical > * {
+	margin-top: var(--margin);
+	margin-bottom: 0;
+}
+
+.u-gap-0 { --gap: 0; }
+.u-gap-1 { --gap: var(--space--1); }
+.u-gap-2 { --gap: var(--space--2); }
+.u-gap-3 { --gap: var(--space--3); }
+.u-gap-4 { --gap: var(--space--4); }
+.u-gap-5 { --gap: var(--space--5); }
+.u-gap-6 { --gap: var(--space--6); }
+.u-gap-7 { --gap: var(--space--7); }
+.u-gap-8 { --gap: var(--space--8); }
+.u-gap-gutter { --gap: var(--site--gutter); }
+.u-gap-row-0 { --gap-y: 0; }
+.u-gap-row-1 { --gap-y: var(--space--1); }
+.u-gap-row-2 { --gap-y: var(--space--2); }
+.u-gap-row-3 { --gap-y: var(--space--3); }
+.u-gap-row-4 { --gap-y: var(--space--4); }
+.u-gap-row-5 { --gap-y: var(--space--5); }
+.u-gap-row-6 { --gap-y: var(--space--6); }
+.u-gap-row-7 { --gap-y: var(--space--7); }
+.u-gap-row-8 { --gap-y: var(--space--8); }
+.u-gap-row-gutter { --gap-y: var(--site--gutter); }
+
+.u-child-contain > * {
+	display: inline-block;
+	width: 100%;
+	max-width: inherit;
+	margin-top: 0;
+}
+
+.u-text-margin-none :is([class*="u-text-style-"],h1,h2,h3,h4,h5,h6,p) {
+	margin-top: 0;
+	margin-bottom: 0;
+}
+
+[data-padding-top="none"] { padding-top: var(--section-space--none); }
+[data-padding-bottom="none"] { padding-bottom: var(--section-space--none); }
+
+[data-padding-top="small"] { padding-top: var(--section-space--small); }
+[data-padding-bottom="small"] { padding-bottom: var(--section-space--small); }
+
+[data-padding-top="main"] { padding-top: var(--section-space--main); }
+[data-padding-bottom="main"] { padding-bottom: var(--section-space--main); }
+
+[data-padding-top="large"] { padding-top: var(--section-space--large); }
+[data-padding-bottom="large"] { padding-bottom: var(--section-space--large); }
+
+.wf-design-mode .g_clickable_wrap {
+	z-index: 0;
+}
+.g_clickable_wrap a[href="#"] {
+	display: none;
+}
+.g_clickable_wrap a[href="#"] ~ button {
+	display: block;
+}
 
 /* ==========================================================================
 1. GLOBAL STYLES

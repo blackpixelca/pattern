@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-29T00:28:18.496Z",
+  "generatedAt": "2026-07-29T00:47:47.490Z",
   "active": true,
   "pilotOnly": true,
   "checks": [
@@ -164,6 +164,14 @@
       "passed": true
     },
     {
+      "check": "Shared CSS owns semantic positioning required by shared Header and Footer",
+      "passed": true
+    },
+    {
+      "check": "V1 CSS excludes the extracted generic compatibility foundation",
+      "passed": true
+    },
+    {
       "check": "Shared Marketo feature keeps rendered-form scope",
       "passed": true
     },
@@ -183,13 +191,13 @@
   "files": [
     {
       "path": "css/shared.css",
-      "bytes": 22017,
-      "sha256": "47b7322eee6effcddb5d9c019d71a5239f526d688d7a1a0b7682dc1ef48186b9"
+      "bytes": 26371,
+      "sha256": "7fbd7672e8ace61454c55b1e82b70288384daf984c7772a5a2e5a0e13a36d097"
     },
     {
       "path": "css/v1.css",
-      "bytes": 38295,
-      "sha256": "918bda490306f2f18060444330805d3f94f4cc985622ed85b58cb6e2aac09f48"
+      "bytes": 28639,
+      "sha256": "9d82f8ce8973e147118b96f56bb15b953889863d149bddd07d0c6339384ef03d"
     },
     {
       "path": "css/v2.css",
