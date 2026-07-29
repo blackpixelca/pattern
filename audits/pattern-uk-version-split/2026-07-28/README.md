@@ -1,6 +1,8 @@
-# Pattern UK V1/V2 Split — Phase 1
+# Pattern UK V1/V2 Split
 
-Phase 1, Phase 2, and Phase 3 are complete. The site now has explicit page markers and an inactive, validated source split; production asset loading and publishing remain unchanged.
+Phases 1 through 4 are complete. The site has explicit page markers, a
+validated source split, and an isolated two-page asset-selection pilot in
+saved Designer state. Nothing was published.
 
 ## Outcome
 
@@ -49,6 +51,17 @@ The correct architecture therefore has four layers: Shared core, V1, V2, and fea
 
 See `phase-2-summary.md` and `phase-2-verification.json`.
 
+## Phase 4 verification
+
+- Immutable package: `uk-version-split-v0.4.3`
+- Pilot pages: Pattern Intelligence (V2) and Our Story (V1)
+- Four responsive breakpoints
+- 80 of 80 CDN-backed browser checks passed
+- Site last-published timestamp remained `2026-07-28T16:42:59.449Z`
+
+See `phase-4-summary.md` and `phase-4-verification.json`.
+
 ## Next approval
 
-Phase 4 hosts or otherwise exposes immutable pilot assets, adds version-specific page-head CSS references, and pilots the global JavaScript loader on Pattern Intelligence plus one representative V1 page. It requires separate approval.
+Phase 5 would move from the two-page pilot to a controlled site-wide rollout.
+It requires a separate plan, approval, and publication decision.
