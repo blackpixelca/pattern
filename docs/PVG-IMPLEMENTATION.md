@@ -18,6 +18,7 @@ standalone footer-script replacement.
 
 - PVG defaults to `observe` and makes no page changes.
 - Conflicting or unknown version markers cannot activate.
+- A configured version cannot override a contradictory authored page marker.
 - Unmarked `.page_main` pages are reported as probable V2 but are not safe to
   activate without an explicit marker or route-registry entry.
 - V1, V2, and V2L default to `legacyPolicy: "preserve"`.
@@ -93,6 +94,7 @@ authored version marker.
 - [x] V3 marker resolves to V3.
 - [x] Unmarked `.page_main` is reported as unsafe inferred V2.
 - [x] Conflicting markers refuse activation.
+- [x] A forced configuration that contradicts the page marker refuses activation.
 - [x] Unknown pages refuse activation.
 - [x] Observation mode injects no component assets.
 - [x] Legacy pages remain preserved unless `legacyPolicy: "gateway"` is explicit.
@@ -102,6 +104,21 @@ authored version marker.
 - [x] An explicitly consent-gated V3 video waits until that category is allowed.
 - [x] Dependencies and component assets load at most once.
 - [x] Module failure leaves authored Webflow content available.
+- [x] V3 H1 heading reveal is planned only when its enabled H1 variant is present.
+- [x] V3 heading reveal loads GSAP, ScrollTrigger, and SplitText at one aligned version.
+
+## Background release 0.2.0
+
+PVG `0.2.0` remains inert by default and is not installed on Pattern
+Production. It adds:
+
+- V3 H1-only heading-reveal detection and the Runtime `0.3.0` module contract;
+- aligned Webflow-hosted GSAP, ScrollTrigger, and SplitText `3.15.0`
+  dependencies;
+- a hard refusal when a configured version contradicts an authored page
+  marker; and
+- regression coverage proving observation mode adds zero assets, non-H1
+  headings do not match, and the active H1 module and dependencies deduplicate.
 
 ## Integrity audit finding
 

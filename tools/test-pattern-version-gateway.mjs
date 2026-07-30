@@ -11,6 +11,13 @@ const videoPopupSource = await fs.readFile(
   new URL('../webflow/pattern.com/scripts/media/video-popup.js', import.meta.url),
   'utf8',
 );
+const headingRevealSource = await fs.readFile(
+  new URL(
+    '../webflow/pattern.com/scripts/interaction/v3-heading-text-reveal.js',
+    import.meta.url,
+  ),
+  'utf8',
+);
 const gatewayEmbed = await fs.readFile(
   new URL(
     '../webflow/pattern.com/scripts/runtime/pattern-version-gateway-embed.html',
@@ -50,7 +57,7 @@ async function createScenario({ html, config = {}, routes = [] }) {
     ...config,
   });
   await page.addScriptTag({ content: gatewaySource });
-  await page.waitForFunction(() => window.PatternVersionGateway?.version === '0.1.0');
+  await page.waitForFunction(() => window.PatternVersionGateway?.version === '0.2.0');
   await page.waitForTimeout(25);
 
   return page;
@@ -71,6 +78,13 @@ try {
   assert.match(gatewayEmbed, /pattern@[0-9a-f]{40}\/webflow\/pattern\.com\/scripts\/runtime/);
   assert.ok(!gatewayEmbed.includes('PVG_COMMIT_SHA'));
   assert.ok(gatewaySource.includes(toSRI(videoPopupSource)));
+  assert.ok(gatewaySource.includes(toSRI(headingRevealSource)));
+  assert.ok(
+    gatewaySource.includes(
+      'https://cdn.prod.website-files.com/gsap/3.15.0/gsap.min.js',
+    ),
+  );
+  assert.ok(!gatewaySource.includes('gsap@3.13.0'));
 
   const v1 = await inspectScenario({
     html: '<main class="page_main cc-v1"><nav class="nav_wrap"></nav></main>',
@@ -116,6 +130,41 @@ try {
   assert.ok(v3Observe.plan.some((module) => module.id === 'v3-video-popup'));
   assert.equal(v3Observe.managedAssets, 0);
 
+  const v3HeadingObserve = await inspectScenario({
+    html: `
+      <main class="page_main_v3">
+        <div
+          data-heading-reveal="true"
+          data-wf--pattern-library-v3--typography-heading--font-style="h1"
+        >
+          <h1>Observed H1</h1>
+        </div>
+      </main>
+    `,
+  });
+  assert.ok(
+    v3HeadingObserve.plan.some((module) => module.id === 'v3-heading-text-reveal'),
+  );
+  assert.equal(v3HeadingObserve.managedAssets, 0);
+
+  const v3NonH1HeadingObserve = await inspectScenario({
+    html: `
+      <main class="page_main_v3">
+        <div
+          data-heading-reveal="true"
+          data-wf--pattern-library-v3--typography-heading--font-style="h2"
+        >
+          <h2>Unanimated H2</h2>
+        </div>
+      </main>
+    `,
+  });
+  assert.ok(
+    !v3NonH1HeadingObserve.plan.some(
+      (module) => module.id === 'v3-heading-text-reveal',
+    ),
+  );
+
   const v3WithLegacyMarkup = await inspectScenario({
     html: `
       <main class="page_main_v3">
@@ -144,6 +193,16 @@ try {
   assert.equal(conflict.detection.safe, false);
   assert.deepEqual(conflict.detection.conflicts, ['v1']);
   assert.equal(conflict.activation.reason, 'conflicting-version-markers');
+
+  const configuredConflict = await inspectScenario({
+    html: '<main class="page_main cc-v1"></main>',
+    config: { mode: 'active', legacyPolicy: 'gateway', version: 'v3' },
+  });
+  assert.equal(configuredConflict.detection.version, 'v1');
+  assert.equal(configuredConflict.detection.safe, false);
+  assert.deepEqual(configuredConflict.detection.conflicts, ['v3']);
+  assert.equal(configuredConflict.activation.reason, 'conflicting-version-markers');
+  assert.equal(configuredConflict.managedAssets, 0);
 
   const unknown = await inspectScenario({
     html: '<main></main>',
@@ -191,6 +250,63 @@ try {
   assert.equal(activeLegacy.managedScripts, 1);
   assert.equal(activeLegacy.managedStyles, 1);
   await activeLegacyPage.close();
+
+  const activeV3HeadingPage = await createScenario({
+    html: `
+      <main class="page_main_v3">
+        <div
+          data-heading-reveal="true"
+          data-wf--pattern-library-v3--typography-heading--font-style="h1"
+        >
+          <h1>Active H1</h1>
+        </div>
+      </main>
+    `,
+    config: { mode: 'active' },
+    routes: [
+      {
+        url: '**/gsap/3.15.0/gsap.min.js',
+        body: 'window.gsap = { registerPlugin() {} };',
+      },
+      {
+        url: '**/gsap/3.15.0/ScrollTrigger.min.js',
+        body: 'window.ScrollTrigger = {};',
+      },
+      {
+        url: '**/gsap/3.15.0/SplitText.min.js',
+        body: 'window.SplitText = {};',
+      },
+      {
+        url: '**/scripts/interaction/v3-heading-text-reveal.js',
+        body: headingRevealSource,
+      },
+    ],
+  });
+  await activeV3HeadingPage.waitForFunction(
+    () =>
+      document
+        .querySelector('[data-heading-reveal="true"]')
+        ?.getAttribute('data-pattern-heading-reveal-initialized') === 'reduced-motion',
+  );
+  const activeV3Heading = await activeV3HeadingPage.evaluate(() => ({
+    module: window.PatternVersionGateway
+      .inspect()
+      .modules.find((candidate) => candidate.id === 'v3-heading-text-reveal'),
+    initialized: document
+      .querySelector('[data-heading-reveal="true"]')
+      .getAttribute('data-pattern-heading-reveal-initialized'),
+    dependencyScripts: document.querySelectorAll(
+      'script[data-pattern-pvg-asset^="dependency:"]',
+    ).length,
+    moduleScripts: document.querySelectorAll(
+      'script[data-pattern-pvg-asset="module:v3-heading-text-reveal:script"]',
+    ).length,
+  }));
+  assert.equal(activeV3Heading.module.status, 'ready');
+  assert.equal(activeV3Heading.initialized, 'reduced-motion');
+  assert.equal(activeV3Heading.dependencyScripts, 3);
+  assert.equal(activeV3Heading.moduleScripts, 1);
+  await activeV3HeadingPage.close();
 
   const activeV3Page = await createScenario({
     html: `

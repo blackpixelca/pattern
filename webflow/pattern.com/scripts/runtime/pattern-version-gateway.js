@@ -13,7 +13,7 @@
   'use strict';
 
   const GLOBAL_NAME = 'PatternVersionGateway';
-  const VERSION = '0.1.0';
+  const VERSION = '0.2.0';
   const EVENT_PREFIX = 'pattern:pvg';
   const ALL_VERSIONS = ['v1', 'v2', 'v2l', 'v3'];
   const LEGACY_VERSIONS = ['v1', 'v2', 'v2l'];
@@ -173,18 +173,6 @@
 
   const detectVersion = (scope = document) => {
     const configuredVersion = normalizeVersion(config.version);
-    if (configuredVersion) {
-      return {
-        version: configuredVersion,
-        family: getFamily(configuredVersion),
-        source: 'configuration',
-        evidence: configuredVersion,
-        confidence: 'high',
-        conflicts: [],
-        safe: true,
-      };
-    }
-
     const explicitMatches = VERSION_MARKERS.flatMap((marker) =>
       marker.selectors
         .filter((selector) => scope.querySelector?.(selector))
@@ -197,16 +185,31 @@
 
     if (matchedVersions.length) {
       const version = matchedVersions[0];
-      const conflicts = matchedVersions.slice(1);
+      const conflicts = [
+        ...matchedVersions.slice(1),
+        ...(configuredVersion && configuredVersion !== version ? [configuredVersion] : []),
+      ];
 
       return {
         version,
         family: getFamily(version),
-        source: 'page-marker',
+        source: configuredVersion ? 'page-marker+configuration' : 'page-marker',
         evidence: explicitMatches.filter((match) => match.version === version).map((match) => match.selector),
         confidence: conflicts.length ? 'low' : 'high',
-        conflicts,
+        conflicts: [...new Set(conflicts)],
         safe: conflicts.length === 0,
+      };
+    }
+
+    if (configuredVersion) {
+      return {
+        version: configuredVersion,
+        family: getFamily(configuredVersion),
+        source: 'configuration',
+        evidence: configuredVersion,
+        confidence: 'high',
+        conflicts: [],
+        safe: true,
       };
     }
 
@@ -361,7 +364,20 @@
         global: 'gsap',
         scripts: [
           {
-            src: 'https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js',
+            src: 'https://cdn.prod.website-files.com/gsap/3.15.0/gsap.min.js',
+            crossOrigin: 'anonymous',
+          },
+        ],
+      },
+    ],
+    [
+      'split-text',
+      {
+        global: 'SplitText',
+        dependencies: ['gsap'],
+        scripts: [
+          {
+            src: 'https://cdn.prod.website-files.com/gsap/3.15.0/SplitText.min.js',
             crossOrigin: 'anonymous',
           },
         ],
@@ -638,6 +654,20 @@
           integrity: 'sha384-jG6Cq9TypUqqWkapLKCuulUChu/MFL5KRj3BSJXJ712AKivnT+L/vgtM0i7vXSlh',
         },
       ],
+    },
+    {
+      id: 'v3-heading-text-reveal',
+      versions: ['v3'],
+      selector: [
+        '[data-heading-reveal="true"][data-wf--typography-heading--font-style="h1"]',
+        '[data-heading-reveal="true"][data-wf--pattern-library-v3--typography-heading--font-style="h1"]',
+      ].join(','),
+      global: 'PatternV3HeadingReveal',
+      script: {
+        src: '../interaction/v3-heading-text-reveal.js',
+        integrity: 'sha384-N/wjF8MMvIuwrvZgJaLCO7Cg9AbFzSS8UaFsBUWzejVzE4qW51fPUKlSaGGW21HF',
+      },
+      dependencies: ['scroll-trigger', 'split-text'],
     },
     {
       id: 'case-study',
