@@ -15,7 +15,7 @@ Use
 
 The prepared embed:
 
-- loads PVG `0.2.2` from an immutable commit URL;
+- loads PVG `0.2.3` from an immutable commit URL;
 - verifies the runtime with SRI;
 - sets `mode="active"`; and
 - sets `legacyPolicy="preserve"`.

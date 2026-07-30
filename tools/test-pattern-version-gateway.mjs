@@ -81,7 +81,7 @@ async function createScenario({ html, config = {}, routes = [] }) {
     ...config,
   });
   await page.addScriptTag({ content: gatewaySource });
-  await page.waitForFunction(() => window.PatternVersionGateway?.version === '0.2.2');
+  await page.waitForFunction(() => window.PatternVersionGateway?.version === '0.2.3');
   await page.waitForTimeout(25);
 
   return page;
@@ -127,7 +127,7 @@ async function inspectEmbedScenario({ html, embed, routes = [] }) {
 
   await page.setContent(html, { waitUntil: 'domcontentloaded' });
   await page.addScriptTag({ content: getInlineScript(embed) });
-  await page.waitForFunction(() => window.PatternVersionGateway?.version === '0.2.2');
+  await page.waitForFunction(() => window.PatternVersionGateway?.version === '0.2.3');
   await page.waitForTimeout(25);
 
   const result = await page.evaluate(() => ({
@@ -166,6 +166,11 @@ try {
     ),
   );
   assert.ok(!gatewaySource.includes('gsap@3.13.0'));
+  assert.ok(
+    gatewaySource.includes(
+      'pattern@aa2e661b1aad8fa6d3fcc1d7c0a0aa3347cff1b6/webflow/pattern.com',
+    ),
+  );
 
   const v1 = await inspectScenario({
     html: '<main class="page_main cc-v1"><nav class="nav_wrap"></nav></main>',
@@ -475,7 +480,7 @@ try {
         `,
       },
       {
-        url: '**/pattern@v1.0.8/webflow/pattern.com/scripts/interaction/card-load-animations-v10.js',
+        url: '**/pattern@aa2e661b1aad8fa6d3fcc1d7c0a0aa3347cff1b6/webflow/pattern.com/scripts/interaction/card-load-animations-v10.js',
         body: 'window.__pvgV2LCardLoads = (window.__pvgV2LCardLoads || 0) + 1;',
       },
       {

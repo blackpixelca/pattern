@@ -13,7 +13,7 @@
   'use strict';
 
   const GLOBAL_NAME = 'PatternVersionGateway';
-  const VERSION = '0.2.2';
+  const VERSION = '0.2.3';
   const EVENT_PREFIX = 'pattern:pvg';
   const ALL_VERSIONS = ['v1', 'v2', 'v2l', 'v3'];
   const LEGACY_VERSIONS = ['v1', 'v2', 'v2l'];
@@ -50,6 +50,8 @@
     'https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com';
   const LEGACY_IFRAME_BASE =
     'https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.2/webflow/pattern.com';
+  const CARD_LOAD_BASE =
+    'https://cdn.jsdelivr.net/gh/specterstudio/pattern@aa2e661b1aad8fa6d3fcc1d7c0a0aa3347cff1b6/webflow/pattern.com';
   const states = new Map();
   const dependencyPromises = new Map();
   const scriptPromises = new Map();
@@ -620,7 +622,7 @@
       versions: ['v2', 'v2l', 'v3'],
       selector: '[card-grid] [card-load]',
       script: {
-        src: `${LEGACY_BASE}/scripts/interaction/card-load-animations-v10.js`,
+        src: `${CARD_LOAD_BASE}/scripts/interaction/card-load-animations-v10.js`,
       },
       dependencies: ['scroll-trigger'],
     },
