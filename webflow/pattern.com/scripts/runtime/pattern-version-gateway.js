@@ -13,7 +13,7 @@
   'use strict';
 
   const GLOBAL_NAME = 'PatternVersionGateway';
-  const VERSION = '0.2.1';
+  const VERSION = '0.2.2';
   const EVENT_PREFIX = 'pattern:pvg';
   const ALL_VERSIONS = ['v1', 'v2', 'v2l', 'v3'];
   const LEGACY_VERSIONS = ['v1', 'v2', 'v2l'];
@@ -132,41 +132,39 @@
     {
       version: 'v3',
       selectors: [
-        '[data-pattern-version="v3"]',
         'html[data-pattern-version="v3"]',
         'body[data-pattern-version="v3"]',
+        '.page_main[data-pattern-version="v3"]',
+        '.page_main_v3[data-pattern-version="v3"]',
         '.page_main_v3',
-        '.cc-v3',
+        '.page_main.cc-v3',
       ],
     },
     {
       version: 'v2l',
       selectors: [
-        '[data-pattern-version="v2l"]',
         'html[data-pattern-version="v2l"]',
         'body[data-pattern-version="v2l"]',
+        '.page_main[data-pattern-version="v2l"]',
         '.page_main.cc-v2l',
-        '.cc-v2l',
       ],
     },
     {
       version: 'v2',
       selectors: [
-        '[data-pattern-version="v2"]',
         'html[data-pattern-version="v2"]',
         'body[data-pattern-version="v2"]',
+        '.page_main[data-pattern-version="v2"]',
         '.page_main.cc-v2',
-        '.cc-v2',
       ],
     },
     {
       version: 'v1',
       selectors: [
-        '[data-pattern-version="v1"]',
         'html[data-pattern-version="v1"]',
         'body[data-pattern-version="v1"]',
+        '.page_main[data-pattern-version="v1"]',
         '.page_main.cc-v1',
-        '.cc-v1',
       ],
     },
   ];
