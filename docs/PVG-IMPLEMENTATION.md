@@ -112,6 +112,15 @@ authored version marker.
 - [x] The prepared V3 activation embed preserves V1, V2, and V2L.
 - [x] The observation embed is the tested rollback and loads no component assets.
 
+## Countup asset pin 0.2.3
+
+PVG `0.2.3` keeps the existing version detection and safety policies and
+changes only the card-load animation asset. The module now points to the
+verified commit-pinned countup loader at
+`aa2e661b1aad8fa6d3fcc1d7c0a0aa3347cff1b6`, which preserves V1 and V2
+behavior while fixing horizontal digit layout for V3 stat cards. All other
+legacy modules remain pinned to their existing bases.
+
 ## Background candidate 0.2.2
 
 PVG `0.2.2` is locally committed, remains inert by default, and is not
