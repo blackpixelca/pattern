@@ -68,7 +68,8 @@ async function inspectScenario(options) {
 
 try {
   assert.ok(gatewayEmbed.includes(toSRI(gatewaySource)));
-  assert.ok(gatewayEmbed.includes('pattern@PVG_COMMIT_SHA'));
+  assert.match(gatewayEmbed, /pattern@[0-9a-f]{40}\/webflow\/pattern\.com\/scripts\/runtime/);
+  assert.ok(!gatewayEmbed.includes('PVG_COMMIT_SHA'));
   assert.ok(gatewaySource.includes(toSRI(videoPopupSource)));
 
   const v1 = await inspectScenario({

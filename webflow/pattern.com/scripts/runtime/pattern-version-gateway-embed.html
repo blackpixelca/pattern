@@ -1,8 +1,8 @@
 <!--
   Pattern Version Gateway background loader.
 
-  This template is intentionally observation-only. Replace PVG_COMMIT_SHA
-  before installing it on a safe Webflow staging surface.
+  This template is intentionally observation-only and pins the verified PVG
+  runtime commit for installation on a safe Webflow staging surface.
 
   Keep all existing production footer scripts in place while mode="observe".
 -->
@@ -19,7 +19,7 @@
 
     const script = document.createElement('script');
     script.src =
-      'https://cdn.jsdelivr.net/gh/specterstudio/pattern@PVG_COMMIT_SHA/webflow/pattern.com/scripts/runtime/pattern-version-gateway.js';
+      'https://cdn.jsdelivr.net/gh/specterstudio/pattern@7329a15a6aa9b119558f26c4d93de8290dcf671f/webflow/pattern.com/scripts/runtime/pattern-version-gateway.js';
     script.async = true;
     script.crossOrigin = 'anonymous';
     script.integrity =
