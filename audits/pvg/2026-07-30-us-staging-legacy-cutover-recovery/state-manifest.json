@@ -111,8 +111,11 @@
     "verifiedAt": "2026-07-30T17:11:47Z",
     "draft": true,
     "includeInSitemap": false,
-    "publishedToStaging": false,
-    "nextStep": "Publish only pattern-us.webflow.io, then verify HTTP status and sitemap absence."
+    "publishedToStaging": true,
+    "stagingPublishedAt": "2026-07-30T17:16:13Z",
+    "finalRouteStatus": 404,
+    "finalSitemapStatus": "absent",
+    "verificationFailures": []
   },
   "restoreOrder": [
     "Restore site-head-before.html and site-footer-before.html.",

@@ -87,9 +87,25 @@ const ROUTES = [
     role: "V2 CMS article with table of contents",
   },
   {
+    path: "/blog/analysis-americas-obsession-with-junk-food",
+    expectedVersion: "v2",
+    role: "V2 CMS article that returned a transient 500 during the full crawl",
+  },
+  {
+    path: "/blog/the-halo-effect",
+    expectedVersion: "v2",
+    role: "V2 CMS article that returned a transient 500 during the full crawl",
+  },
+  {
     path: "/case-study/gaia",
     expectedVersion: "v1",
     role: "V1 case-study template with count-up cards",
+    exerciseCountup: true,
+  },
+  {
+    path: "/case-study/flannels",
+    expectedVersion: "v1",
+    role: "New staging case-study item discovered after the corrective publish",
     exerciseCountup: true,
   },
   {
