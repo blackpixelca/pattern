@@ -76,7 +76,7 @@
       "publishedPath": "/resources/international-expansion-videos",
       "lastUpdated": "2026-07-28T06:39:31.129Z"
     },
-    "note": "User described this blank page as unpublished. API metadata returned draft=false; staging route status must be verified after publish."
+    "note": "The first staging publish proved this page remained live and indexed. Its saved state was corrected after the crawl."
   },
   "snapshotSha256": {
     "site-head-before.html": "3468c273dbe6664af735769dd98fe10755778b49fd22fd1170454b058e992f85",
@@ -88,7 +88,9 @@
   },
   "savedCutover": {
     "verifiedAt": "2026-07-30T16:44:29Z",
-    "published": false,
+    "published": true,
+    "stagingPublishedAt": "2026-07-30T16:54:46Z",
+    "publishTarget": "pattern-us.webflow.io only",
     "pvgVersion": "0.2.4",
     "legacyPolicy": "gateway",
     "runtimeCommit": "7bb2b6f2fc7ae258285fbafcd643e717b64009e1",
@@ -104,6 +106,13 @@
       "portal-footer-after.html": "3425dfd2437d9626160a028378534e5c72f004b51ea01d74c04cdc23e0a92a64",
       "slider-images-js-after.html": "c4c124cd1a330ea4fcc6949074f7fe1e6802215dad5dbce46fe7dc53b8d3c5a6"
     }
+  },
+  "internationalCorrection": {
+    "verifiedAt": "2026-07-30T17:11:47Z",
+    "draft": true,
+    "includeInSitemap": false,
+    "publishedToStaging": false,
+    "nextStep": "Publish only pattern-us.webflow.io, then verify HTTP status and sitemap absence."
   },
   "restoreOrder": [
     "Restore site-head-before.html and site-footer-before.html.",
