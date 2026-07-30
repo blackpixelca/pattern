@@ -12,7 +12,7 @@
   'use strict';
 
   var GLOBAL_NAME = 'PatternVideoPopup';
-  var VERSION = '1.1.0';
+  var VERSION = '1.1.2';
   var ROOT_SELECTOR = '[class*="video_player_wrap"]';
   var OPEN_SELECTOR = '[data-video-player-open]';
   var DIALOG_SELECTOR = 'dialog[data-video-player-dialog]';
@@ -119,21 +119,45 @@
     return api.consents;
   }
 
-  function runAfterConsent(category, callback) {
-    var consentPro = window.FinsweetConsentPro;
+  function getConsentCategory(dialog, iframe) {
+    return (
+      dialog.getAttribute('data-consent-category') ||
+      (iframe && iframe.getAttribute('fs-consent-categories')) ||
+      ''
+    ).trim();
+  }
 
-    // The Pattern Library intentionally runs without Consent Pro.
-    if (!consentPro) {
+  function runAfterConsent(category, callback) {
+    if (!category) {
       callback();
       return;
+    }
+
+    var consentPro = window.FinsweetConsentPro;
+
+    if (!consentPro) {
+      consentPro = [];
+      window.FinsweetConsentPro = consentPro;
     }
 
     var completed = false;
 
     function connect(api) {
       function proceedIfAllowed(detail) {
-        var detailState = detail && (detail.consents || detail);
-        var state = detailState || getConsentState(api);
+        var state = getConsentState(api);
+        var detailState =
+          detail &&
+          (detail.consents ||
+            (detail.detail && (detail.detail.consents || detail.detail)));
+
+        if (
+          (!state || !state[category]) &&
+          detailState &&
+          typeof detailState === 'object' &&
+          Object.prototype.hasOwnProperty.call(detailState, category)
+        ) {
+          state = detailState;
+        }
 
         if (completed || !state || !state[category]) return;
         completed = true;
@@ -225,6 +249,7 @@
     var opener = null;
     var closeTimer = null;
     var waitingForConsent = false;
+    var consentCategory = getConsentCategory(dialog, iframe);
 
     function finishClose(options) {
       var settings = options || {};
@@ -317,12 +342,7 @@
       if (dialog.open || waitingForConsent) return;
       waitingForConsent = true;
 
-      var category =
-        dialog.getAttribute('data-consent-category') ||
-        (iframe && iframe.getAttribute('fs-consent-categories')) ||
-        'personalization';
-
-      runAfterConsent(category, function () {
+      runAfterConsent(consentCategory, function () {
         waitingForConsent = false;
         reveal();
       });
