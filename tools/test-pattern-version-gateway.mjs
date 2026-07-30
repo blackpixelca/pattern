@@ -48,6 +48,13 @@ const gatewayV3ActiveEmbed = await fs.readFile(
   ),
   'utf8',
 );
+const gatewayLegacyActiveEmbed = await fs.readFile(
+  new URL(
+    '../webflow/pattern.com/scripts/runtime/pattern-version-gateway-legacy-active-embed.html',
+    import.meta.url,
+  ),
+  'utf8',
+);
 const toSRI = (source) =>
   `sha384-${crypto.createHash('sha384').update(source).digest('base64')}`;
 const allowUnreleasedRuntime = process.env.PVG_ALLOW_UNRELEASED_RUNTIME === '1';
@@ -153,17 +160,28 @@ try {
   if (!allowUnreleasedRuntime) {
     assert.ok(gatewayEmbed.includes(toSRI(gatewaySource)));
     assert.ok(gatewayV3ActiveEmbed.includes(toSRI(gatewaySource)));
+    assert.ok(gatewayLegacyActiveEmbed.includes(toSRI(gatewaySource)));
   }
   assert.match(gatewayEmbed, /pattern@[0-9a-f]{40}\/webflow\/pattern\.com\/scripts\/runtime/);
   assert.match(
     gatewayV3ActiveEmbed,
     /pattern@[0-9a-f]{40}\/webflow\/pattern\.com\/scripts\/runtime/,
   );
+  assert.match(
+    gatewayLegacyActiveEmbed,
+    /pattern@[0-9a-f]{40}\/webflow\/pattern\.com\/scripts\/runtime/,
+  );
   assert.ok(!gatewayEmbed.includes('PVG_COMMIT_SHA'));
   assert.ok(!gatewayV3ActiveEmbed.includes('PVG_COMMIT_SHA'));
+  assert.ok(!gatewayLegacyActiveEmbed.includes('PVG_COMMIT_SHA'));
   assert.match(gatewayEmbed, /script\.dataset\.pvgMode = 'observe'/);
   assert.match(gatewayV3ActiveEmbed, /script\.dataset\.pvgMode = 'active'/);
   assert.match(gatewayV3ActiveEmbed, /script\.dataset\.pvgLegacyPolicy = 'preserve'/);
+  assert.match(gatewayLegacyActiveEmbed, /script\.dataset\.pvgMode = 'active'/);
+  assert.match(
+    gatewayLegacyActiveEmbed,
+    /script\.dataset\.pvgLegacyPolicy = 'gateway'/,
+  );
   assert.ok(gatewaySource.includes(toSRI(videoPopupSource)));
   assert.ok(gatewaySource.includes(toSRI(headingRevealSource)));
   gatewayLocalAssetSources.forEach((source) => {
@@ -233,6 +251,115 @@ try {
   assert.equal(activeEmbedV3.loaderMode, 'active');
   assert.equal(activeEmbedV3.loaderLegacyPolicy, 'preserve');
   assert.equal(activeEmbedV3.dynamicYear, String(new Date().getFullYear()));
+
+  const legacyCutoverPage = await browser.newPage();
+  await legacyCutoverPage.route(
+    '**/scripts/runtime/pattern-version-gateway.js',
+    async (request) => {
+      await request.fulfill({
+        status: 200,
+        contentType: 'text/javascript',
+        body: gatewaySource,
+        headers: {
+          'access-control-allow-origin': '*',
+        },
+      });
+    },
+  );
+  await legacyCutoverPage.route(
+    '**/@splidejs/splide@4.1.4/dist/css/splide.min.css',
+    async (request) => {
+      await request.fulfill({
+        status: 200,
+        contentType: 'text/css',
+        body: '.splide { display: block; }',
+        headers: {
+          'access-control-allow-origin': '*',
+        },
+      });
+    },
+  );
+  await legacyCutoverPage.route(
+    '**/@splidejs/splide@4.1.4/dist/js/splide.min.js',
+    async (request) => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      await request.fulfill({
+        status: 200,
+        contentType: 'text/javascript',
+        body: 'window.Splide = function Splide() {};',
+        headers: {
+          'access-control-allow-origin': '*',
+        },
+      });
+    },
+  );
+  await legacyCutoverPage.setContent(
+    `
+      <script>
+        window.__pvgEarlySplideCalls = 0;
+        window.__pvgSplideCalls = 0;
+        window.__pvgOtherPageFunctionCalls = 0;
+        window.pageFunctions = {
+          added: false,
+          executed: {},
+          functions: {},
+          addFunction(id, fn) {
+            if (!this.functions[id]) this.functions[id] = fn;
+          },
+          executeFunctions() {
+            if (this.added) return;
+            this.added = true;
+            for (const id in this.functions) {
+              if (this.executed[id]) continue;
+              this.functions[id]();
+              this.executed[id] = true;
+            }
+          },
+        };
+        window.pageFunctions.addFunction('splideSlider', () => {
+          if (typeof window.Splide !== 'function') {
+            window.__pvgEarlySplideCalls += 1;
+            throw new Error('Splide executed before its dependency.');
+          }
+          window.__pvgSplideCalls += 1;
+        });
+        window.pageFunctions.addFunction('unrelatedPageFunction', () => {
+          window.__pvgOtherPageFunctionCalls += 1;
+        });
+      </script>
+      <main class="page_main cc-v1">
+        <div class="splide"></div>
+      </main>
+    `,
+    { waitUntil: 'domcontentloaded' },
+  );
+  await legacyCutoverPage.addScriptTag({
+    content: getInlineScript(gatewayLegacyActiveEmbed),
+  });
+  await legacyCutoverPage.evaluate(() => window.pageFunctions.executeFunctions());
+  await legacyCutoverPage.waitForFunction(
+    () =>
+      window.PatternVersionGateway?.version === '0.2.4' &&
+      window.pageFunctions.executed.splideSlider === true,
+  );
+  const legacyCutover = await legacyCutoverPage.evaluate(() => ({
+    activation: window.PatternVersionGateway.inspect().activation,
+    earlySplideCalls: window.__pvgEarlySplideCalls,
+    splideCalls: window.__pvgSplideCalls,
+    otherCalls: window.__pvgOtherPageFunctionCalls,
+    splideExecuted: window.pageFunctions.executed.splideSlider,
+    otherExecuted: window.pageFunctions.executed.unrelatedPageFunction,
+    loaderLegacyPolicy:
+      document.querySelector('[data-pattern-pvg-loader]')?.dataset.pvgLegacyPolicy,
+  }));
+  assert.equal(legacyCutover.activation.allowed, true);
+  assert.equal(legacyCutover.earlySplideCalls, 0);
+  assert.equal(legacyCutover.splideCalls, 1);
+  assert.equal(legacyCutover.otherCalls, 1);
+  assert.equal(legacyCutover.splideExecuted, true);
+  assert.equal(legacyCutover.otherExecuted, true);
+  assert.equal(legacyCutover.loaderLegacyPolicy, 'gateway');
+  await legacyCutoverPage.close();
 
   const rollbackPage = await browser.newPage();
   await rollbackPage.route(

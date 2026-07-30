@@ -128,7 +128,10 @@ legacy-script removal audit:
 The compatibility suite now exercises V1 card/count-up ownership, registered
 Splide execution, and the current Accordion `1.1.0` behavior on explicit V1
 and V2 fixtures. The Pattern US staging cutover must retain the shared
-`pageFunctions` registry and executor during the first removal trial.
+`pageFunctions` registry and executor during the first removal trial. The
+dedicated legacy-active embed parks PVG-owned `nav` and `splideSlider`
+callbacks while that retained executor runs, then PVG invokes them after their
+assets are ready.
 
 ## Countup asset pin 0.2.3
 
