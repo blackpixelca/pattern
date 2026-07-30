@@ -264,7 +264,10 @@
 
     target.textContent = "";
     target.style.display = "inline-flex";
+    target.style.flexDirection = "row";
+    target.style.flexWrap = "nowrap";
     target.style.alignItems = "baseline";
+    target.style.whiteSpace = "nowrap";
 
     const reelJobs = [];
 
@@ -273,6 +276,8 @@
         const span = document.createElement("span");
         span.textContent = token.value;
         span.style.display = "inline-block";
+        span.style.flex = "0 0 auto";
+        span.style.width = "auto";
         span.style.whiteSpace = "pre";
         target.appendChild(span);
         return;
@@ -287,6 +292,7 @@
         const reel = document.createElement("span");
 
         wrapper.style.display = "inline-block";
+        wrapper.style.flex = "0 0 1ch";
         wrapper.style.overflow = "hidden";
         wrapper.style.width = "1ch";
         wrapper.style.height = "1em";
