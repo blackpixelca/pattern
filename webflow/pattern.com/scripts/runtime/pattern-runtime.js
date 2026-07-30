@@ -2,9 +2,13 @@
   'use strict';
 
   const GLOBAL_NAME = 'PatternRuntime';
-  const VERSION = '0.2.0';
+  const VERSION = '0.3.0';
   const EVENT_PREFIX = 'pattern:runtime';
   const DYNAMIC_YEAR_SELECTOR = '[data-dynamic-year]';
+  const V3_HEADING_REVEAL_SELECTOR = [
+    '[data-heading-reveal="true"][data-wf--typography-heading--font-style="h1"]',
+    '[data-heading-reveal="true"][data-wf--pattern-library-v3--typography-heading--font-style="h1"]',
+  ].join(',');
   const currentScript = document.currentScript;
   const existingRuntime = window[GLOBAL_NAME];
 
@@ -192,6 +196,10 @@
       if (definition.global && getGlobal(definition.global)) {
         debug(`Dependency "${id}" already exists.`);
         return getGlobal(definition.global);
+      }
+
+      for (const dependency of definition.dependencies || []) {
+        await loadDependency(dependency);
       }
 
       await Promise.all(
@@ -430,7 +438,31 @@
     global: 'gsap',
     scripts: [
       {
-        src: 'https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js',
+        src: 'https://cdn.prod.website-files.com/gsap/3.15.0/gsap.min.js',
+        crossOrigin: 'anonymous',
+      },
+    ],
+  });
+
+  registerDependency({
+    id: 'scroll-trigger',
+    global: 'ScrollTrigger',
+    dependencies: ['gsap'],
+    scripts: [
+      {
+        src: 'https://cdn.prod.website-files.com/gsap/3.15.0/ScrollTrigger.min.js',
+        crossOrigin: 'anonymous',
+      },
+    ],
+  });
+
+  registerDependency({
+    id: 'split-text',
+    global: 'SplitText',
+    dependencies: ['gsap'],
+    scripts: [
+      {
+        src: 'https://cdn.prod.website-files.com/gsap/3.15.0/SplitText.min.js',
         crossOrigin: 'anonymous',
       },
     ],
@@ -500,8 +532,19 @@
     });
 
     register({
+      id: 'v3-heading-text-reveal',
+      selector: V3_HEADING_REVEAL_SELECTOR,
+      global: 'PatternV3HeadingReveal',
+      script: {
+        src: '../interaction/v3-heading-text-reveal.js',
+        integrity: 'sha384-N/wjF8MMvIuwrvZgJaLCO7Cg9AbFzSS8UaFsBUWzejVzE4qW51fPUKlSaGGW21HF',
+      },
+      dependencies: ['scroll-trigger', 'split-text'],
+    });
+
+    register({
       id: 'case-study',
-      selector: '[data-case-study-slider], .case-study_slider_wrap',
+      selector: '[data-case-study-slider], [class*="case-study_slider_wrap"]',
       global: 'PatternCaseStudyCMS',
       script: {
         src: '../content/case-study-cms-slider.js',
@@ -524,7 +567,7 @@
 
     register({
       id: 'video-popup',
-      selector: '.video_player_wrap',
+      selector: '[class*="video_player_wrap"]',
       global: 'PatternVideoPopup',
       script: {
         src: '../media/video-popup.js',
