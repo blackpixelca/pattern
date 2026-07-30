@@ -18,6 +18,18 @@ const headingRevealSource = await fs.readFile(
   ),
   'utf8',
 );
+const gatewayLocalAssetSources = await Promise.all(
+  [
+    '../webflow/pattern.com/scripts/interaction/marquee.js',
+    '../webflow/pattern.com/styles/marquee.css',
+    '../webflow/pattern.com/scripts/nav/home-anchor-nav.js',
+    '../webflow/pattern.com/styles/home-anchor-nav.css',
+    '../webflow/pattern.com/scripts/interaction/v3-heading-text-reveal.js',
+    '../webflow/pattern.com/scripts/content/case-study-cms-slider.js',
+    '../webflow/pattern.com/scripts/interaction/accordion.js',
+    '../webflow/pattern.com/scripts/media/video-popup.js',
+  ].map((path) => fs.readFile(new URL(path, import.meta.url), 'utf8')),
+);
 const gatewayEmbed = await fs.readFile(
   new URL(
     '../webflow/pattern.com/scripts/runtime/pattern-version-gateway-embed.html',
@@ -79,6 +91,9 @@ try {
   assert.ok(!gatewayEmbed.includes('PVG_COMMIT_SHA'));
   assert.ok(gatewaySource.includes(toSRI(videoPopupSource)));
   assert.ok(gatewaySource.includes(toSRI(headingRevealSource)));
+  gatewayLocalAssetSources.forEach((source) => {
+    assert.ok(gatewaySource.includes(toSRI(source)));
+  });
   assert.ok(
     gatewaySource.includes(
       'https://cdn.prod.website-files.com/gsap/3.15.0/gsap.min.js',
@@ -352,6 +367,45 @@ try {
     'ready',
   );
   await activeV3Page.close();
+
+  const existingRuntimePage = await createScenario({
+    html: `
+      <script>
+        window.__pvgExistingRuntimeInitCalls = 0;
+        window.PatternRuntime = { version: '0.3.0' };
+        window.PatternVideoPopup = {
+          version: '1.1.2',
+          init() {
+            window.__pvgExistingRuntimeInitCalls += 1;
+          },
+        };
+      </script>
+      <main class="page_main_v3">
+        <div class="pattern-library-v3--video_player_wrap">
+          <button data-video-player-open>Play</button>
+          <dialog data-video-player-dialog></dialog>
+        </div>
+      </main>
+    `,
+    config: { mode: 'active' },
+  });
+  await existingRuntimePage.waitForFunction(
+    () =>
+      window.PatternVersionGateway
+        .inspect()
+        .modules.find((module) => module.id === 'v3-video-popup')?.status === 'ready',
+  );
+  const existingRuntime = await existingRuntimePage.evaluate(() => ({
+    initCalls: window.__pvgExistingRuntimeInitCalls,
+    managedModuleScripts: document.querySelectorAll(
+      'script[data-pattern-pvg-asset="module:v3-video-popup:script"]',
+    ).length,
+    runtimeVersion: window.PatternRuntime.version,
+  }));
+  assert.equal(existingRuntime.initCalls, 1);
+  assert.equal(existingRuntime.managedModuleScripts, 0);
+  assert.equal(existingRuntime.runtimeVersion, '0.3.0');
+  await existingRuntimePage.close();
 
   const consentGatedPage = await createScenario({
     html: `

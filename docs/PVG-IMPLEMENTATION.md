@@ -107,10 +107,10 @@ authored version marker.
 - [x] V3 H1 heading reveal is planned only when its enabled H1 variant is present.
 - [x] V3 heading reveal loads GSAP, ScrollTrigger, and SplitText at one aligned version.
 
-## Background release 0.2.0
+## Background candidate 0.2.0
 
-PVG `0.2.0` remains inert by default and is not installed on Pattern
-Production. It adds:
+PVG `0.2.0` is locally committed, remains inert by default, and is not
+installed on Pattern Production. It adds:
 
 - V3 H1-only heading-reveal detection and the Runtime `0.3.0` module contract;
 - aligned Webflow-hosted GSAP, ScrollTrigger, and SplitText `3.15.0`
@@ -118,7 +118,11 @@ Production. It adds:
 - a hard refusal when a configured version contradicts an authored page
   marker; and
 - regression coverage proving observation mode adds zero assets, non-H1
-  headings do not match, and the active H1 module and dependencies deduplicate.
+  headings do not match, and the active H1 module and dependencies deduplicate;
+- verified SRI coverage for every repo-owned V3 asset in the gateway manifest;
+  and
+- coexistence coverage proving an already-loaded V3 Runtime module is reused
+  without injecting a duplicate module script.
 
 ## Integrity audit finding
 
@@ -148,6 +152,16 @@ custom code, or publish state was saved.
 | V3 — Webflow Home V3 | V3 from `.page_main_v3` | Explicit and safe; isolated active test passed | Dynamic year, marquee, Home anchor nav, case study, V3 video |
 
 Every observation-only run injected zero managed component assets.
+
+PVG `0.2.0` repeated this browser-only matrix on July 29, 2026. All five
+surfaces returned 200, PVG injected zero assets, and the observation introduced
+zero console or page errors. Pattern Production reported Runtime `0.2.0`; the
+V3 Library reported Runtime `0.3.0`.
+
+The V3 Library `/cc/type` source page currently has an unmarked `.page_main`.
+PVG therefore reports it as unsafe inferred V2 and refuses activation. This is
+the correct fail-closed result. Before PVG can activate on the Library site,
+the Library needs an authored V3 marker or an exact, reviewed route registry.
 
 The Phase 5 Notion record classifies the production homepage as V2L with
 `.cc-v2l`. The current published DOM instead contains exactly
