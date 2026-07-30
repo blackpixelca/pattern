@@ -37,8 +37,20 @@ const gatewayEmbed = await fs.readFile(
   ),
   'utf8',
 );
+const gatewayV3ActiveEmbed = await fs.readFile(
+  new URL(
+    '../webflow/pattern.com/scripts/runtime/pattern-version-gateway-v3-active-embed.html',
+    import.meta.url,
+  ),
+  'utf8',
+);
 const toSRI = (source) =>
   `sha384-${crypto.createHash('sha384').update(source).digest('base64')}`;
+const getInlineScript = (embed) => {
+  const match = embed.match(/<script>([\s\S]*?)<\/script>/);
+  assert.ok(match, 'Expected one inline script in the embed.');
+  return match[1];
+};
 
 const browser = await chromium.launch({ headless: true });
 
@@ -69,7 +81,7 @@ async function createScenario({ html, config = {}, routes = [] }) {
     ...config,
   });
   await page.addScriptTag({ content: gatewaySource });
-  await page.waitForFunction(() => window.PatternVersionGateway?.version === '0.2.0');
+  await page.waitForFunction(() => window.PatternVersionGateway?.version === '0.2.1');
   await page.waitForTimeout(25);
 
   return page;
@@ -85,10 +97,64 @@ async function inspectScenario(options) {
   return result;
 }
 
+async function inspectEmbedScenario({ html, embed, routes = [] }) {
+  const page = await browser.newPage();
+
+  await page.route('**/scripts/runtime/pattern-version-gateway.js', async (request) => {
+    await request.fulfill({
+      status: 200,
+      contentType: 'text/javascript',
+      body: gatewaySource,
+      headers: {
+        'access-control-allow-origin': '*',
+      },
+    });
+  });
+
+  for (const route of routes) {
+    await page.route(route.url, async (request) => {
+      await request.fulfill({
+        status: route.status || 200,
+        contentType: route.contentType || 'text/javascript',
+        body: route.body || '',
+        headers: {
+          'access-control-allow-origin': '*',
+          ...(route.headers || {}),
+        },
+      });
+    });
+  }
+
+  await page.setContent(html, { waitUntil: 'domcontentloaded' });
+  await page.addScriptTag({ content: getInlineScript(embed) });
+  await page.waitForFunction(() => window.PatternVersionGateway?.version === '0.2.1');
+  await page.waitForTimeout(25);
+
+  const result = await page.evaluate(() => ({
+    ...window.PatternVersionGateway.inspect(),
+    managedAssets: document.querySelectorAll('[data-pattern-pvg-asset]').length,
+    loaderMode: document.querySelector('[data-pattern-pvg-loader]')?.dataset.pvgMode,
+    loaderLegacyPolicy:
+      document.querySelector('[data-pattern-pvg-loader]')?.dataset.pvgLegacyPolicy,
+    dynamicYear: document.querySelector('[data-dynamic-year]')?.textContent,
+  }));
+  await page.close();
+  return result;
+}
+
 try {
   assert.ok(gatewayEmbed.includes(toSRI(gatewaySource)));
+  assert.ok(gatewayV3ActiveEmbed.includes(toSRI(gatewaySource)));
   assert.match(gatewayEmbed, /pattern@[0-9a-f]{40}\/webflow\/pattern\.com\/scripts\/runtime/);
+  assert.match(
+    gatewayV3ActiveEmbed,
+    /pattern@[0-9a-f]{40}\/webflow\/pattern\.com\/scripts\/runtime/,
+  );
   assert.ok(!gatewayEmbed.includes('PVG_COMMIT_SHA'));
+  assert.ok(!gatewayV3ActiveEmbed.includes('PVG_COMMIT_SHA'));
+  assert.match(gatewayEmbed, /script\.dataset\.pvgMode = 'observe'/);
+  assert.match(gatewayV3ActiveEmbed, /script\.dataset\.pvgMode = 'active'/);
+  assert.match(gatewayV3ActiveEmbed, /script\.dataset\.pvgLegacyPolicy = 'preserve'/);
   assert.ok(gatewaySource.includes(toSRI(videoPopupSource)));
   assert.ok(gatewaySource.includes(toSRI(headingRevealSource)));
   gatewayLocalAssetSources.forEach((source) => {
@@ -120,6 +186,95 @@ try {
   });
   assert.equal(v2l.detection.version, 'v2l');
   assert.equal(v2l.detection.family, 'v2');
+
+  const observedEmbedV3 = await inspectEmbedScenario({
+    html: '<main class="page_main_v3"><span data-dynamic-year>2000</span></main>',
+    embed: gatewayEmbed,
+  });
+  assert.equal(observedEmbedV3.mode, 'observe');
+  assert.equal(observedEmbedV3.activation.reason, 'observe-mode');
+  assert.equal(observedEmbedV3.loaderMode, 'observe');
+  assert.equal(observedEmbedV3.managedAssets, 0);
+  assert.equal(observedEmbedV3.dynamicYear, '2000');
+
+  const activeEmbedV3 = await inspectEmbedScenario({
+    html: '<main class="page_main_v3"><span data-dynamic-year>2000</span></main>',
+    embed: gatewayV3ActiveEmbed,
+  });
+  assert.equal(activeEmbedV3.mode, 'active');
+  assert.equal(activeEmbedV3.activation.reason, 'active');
+  assert.equal(activeEmbedV3.loaderMode, 'active');
+  assert.equal(activeEmbedV3.loaderLegacyPolicy, 'preserve');
+  assert.equal(activeEmbedV3.dynamicYear, String(new Date().getFullYear()));
+
+  const rollbackPage = await browser.newPage();
+  await rollbackPage.route(
+    '**/scripts/runtime/pattern-version-gateway.js',
+    async (request) => {
+      await request.fulfill({
+        status: 200,
+        contentType: 'text/javascript',
+        body: gatewaySource,
+        headers: {
+          'access-control-allow-origin': '*',
+        },
+      });
+    },
+  );
+  await rollbackPage.setContent('<main class="page_main_v3"></main>', {
+    waitUntil: 'domcontentloaded',
+  });
+  await rollbackPage.addScriptTag({
+    content: getInlineScript(gatewayV3ActiveEmbed),
+  });
+  await rollbackPage.waitForFunction(
+    () => window.PatternVersionGateway?.inspect().mode === 'active',
+  );
+  await rollbackPage.addScriptTag({
+    content: getInlineScript(gatewayEmbed),
+  });
+  await rollbackPage.waitForFunction(
+    () => window.PatternVersionGateway?.inspect().mode === 'observe',
+  );
+  await rollbackPage.evaluate(() => {
+    document.querySelector('.page_main_v3').insertAdjacentHTML(
+      'beforeend',
+      `
+        <div class="pattern-library-v3--video_player_wrap">
+          <button data-video-player-open>Play</button>
+          <dialog data-video-player-dialog></dialog>
+        </div>
+      `,
+    );
+  });
+  await rollbackPage.waitForTimeout(50);
+  const rollback = await rollbackPage.evaluate(() => ({
+    inspection: window.PatternVersionGateway.inspect(),
+    initialized: document
+      .querySelector('[class*="video_player_wrap"]')
+      .hasAttribute('data-video-player-popup-initialized'),
+    managedAssets: document.querySelectorAll('[data-pattern-pvg-asset]').length,
+  }));
+  assert.equal(rollback.inspection.mode, 'observe');
+  assert.equal(rollback.inspection.activation.reason, 'observe-mode');
+  assert.equal(rollback.initialized, false);
+  assert.equal(rollback.managedAssets, 0);
+  await rollbackPage.close();
+
+  const activeEmbedV1 = await inspectEmbedScenario({
+    html: `
+      <main class="page_main cc-v1">
+        <nav class="nav_wrap"></nav>
+        <span data-dynamic-year>2000</span>
+      </main>
+    `,
+    embed: gatewayV3ActiveEmbed,
+  });
+  assert.equal(activeEmbedV1.detection.version, 'v1');
+  assert.equal(activeEmbedV1.activation.reason, 'legacy-preserved');
+  assert.equal(activeEmbedV1.loaderLegacyPolicy, 'preserve');
+  assert.equal(activeEmbedV1.managedAssets, 0);
+  assert.equal(activeEmbedV1.dynamicYear, '2000');
 
   const inferredV2 = await inspectScenario({
     html: '<main class="page_main"></main>',
@@ -265,6 +420,113 @@ try {
   assert.equal(activeLegacy.managedScripts, 1);
   assert.equal(activeLegacy.managedStyles, 1);
   await activeLegacyPage.close();
+
+  const activeV2LPage = await createScenario({
+    html: `
+      <script>
+        window.pageFunctions = {
+          added: true,
+          executed: {},
+          functions: {},
+          addFunction(id, fn) {
+            if (!this.functions[id]) this.functions[id] = fn;
+          },
+        };
+      </script>
+      <main class="page_main cc-v2l">
+        <span data-dynamic-year>2000</span>
+        <nav class="nav_wrap"></nav>
+        <div class="splide"></div>
+        <div class="splide"></div>
+        <div card-grid>
+          <article card-load="count-up"><span stat-count-up>123</span></article>
+        </div>
+      </main>
+    `,
+    config: { mode: 'active', legacyPolicy: 'gateway' },
+    routes: [
+      {
+        url: '**/pattern@v1.0.8/webflow/pattern.com/styles/nav.css',
+        contentType: 'text/css',
+        body: '.nav_wrap { display: block; }',
+      },
+      {
+        url: '**/pattern@v1.0.8/webflow/pattern.com/scripts/nav/nav.js',
+        body: `
+          window.__pvgV2LNavLoads = (window.__pvgV2LNavLoads || 0) + 1;
+          window.pageFunctions.addFunction('nav', () => {
+            document.querySelectorAll('.nav_wrap').forEach((nav) => {
+              nav.setAttribute('data-pattern-nav-ready', 'true');
+            });
+          });
+        `,
+      },
+      {
+        url: '**/pattern@v1.0.8/webflow/pattern.com/scripts/interaction/card-load-animations-v10.js',
+        body: 'window.__pvgV2LCardLoads = (window.__pvgV2LCardLoads || 0) + 1;',
+      },
+      {
+        url: '**/gsap/3.15.0/gsap.min.js',
+        body: 'window.gsap = { registerPlugin() {} };',
+      },
+      {
+        url: '**/gsap/3.15.0/ScrollTrigger.min.js',
+        body: 'window.ScrollTrigger = {};',
+      },
+      {
+        url: '**/@splidejs/splide@4.1.4/dist/css/splide.min.css',
+        contentType: 'text/css',
+        body: '.splide { display: block; }',
+      },
+      {
+        url: '**/@splidejs/splide@4.1.4/dist/js/splide.min.js',
+        body: 'window.Splide = function Splide() {};',
+      },
+    ],
+  });
+  await activeV2LPage.waitForFunction(() => {
+    const modules = window.PatternVersionGateway.inspect().modules;
+    return ['dynamic-year', 'legacy-nav', 'card-load-animations', 'splide'].every(
+      (id) => modules.find((module) => module.id === id)?.status === 'ready',
+    );
+  });
+  const activeV2L = await activeV2LPage.evaluate(() => {
+    const inspection = window.PatternVersionGateway.inspect();
+    return {
+      inspection,
+      year: document.querySelector('[data-dynamic-year]').textContent,
+      navReady: document
+        .querySelector('.nav_wrap')
+        .hasAttribute('data-pattern-nav-ready'),
+      navLoads: window.__pvgV2LNavLoads,
+      cardLoads: window.__pvgV2LCardLoads,
+      navRegistryExecuted: window.pageFunctions.executed.nav,
+      managedAssetIds: [...document.querySelectorAll('[data-pattern-pvg-asset]')].map(
+        (asset) => asset.dataset.patternPvgAsset,
+      ),
+    };
+  });
+  assert.equal(activeV2L.inspection.detection.version, 'v2l');
+  assert.equal(activeV2L.inspection.detection.family, 'v2');
+  assert.equal(activeV2L.inspection.activation.allowed, true);
+  assert.equal(activeV2L.year, String(new Date().getFullYear()));
+  assert.equal(activeV2L.navReady, true);
+  assert.equal(activeV2L.navLoads, 1);
+  assert.equal(activeV2L.cardLoads, 1);
+  assert.equal(activeV2L.navRegistryExecuted, true);
+  assert.equal(
+    activeV2L.managedAssetIds.filter((id) => id === 'dependency:splide:script').length,
+    1,
+  );
+  assert.equal(
+    activeV2L.managedAssetIds.filter((id) => id === 'dependency:splide:style').length,
+    1,
+  );
+  assert.equal(
+    activeV2L.inspection.modules.find((module) => module.id === 'v3-video-popup').matched,
+    false,
+  );
+  await activeV2LPage.close();
 
   const activeV3HeadingPage = await createScenario({
     html: `

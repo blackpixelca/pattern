@@ -106,10 +106,14 @@ authored version marker.
 - [x] Module failure leaves authored Webflow content available.
 - [x] V3 H1 heading reveal is planned only when its enabled H1 variant is present.
 - [x] V3 heading reveal loads GSAP, ScrollTrigger, and SplitText at one aligned version.
+- [x] A V2L compatibility fixture activates the V2-family nav, card, and Splide plan.
+- [x] A legacy nav registered after `pageFunctions` has already run is executed once.
+- [x] The prepared V3 activation embed preserves V1, V2, and V2L.
+- [x] The observation embed is the tested rollback and loads no component assets.
 
-## Background candidate 0.2.0
+## Background candidate 0.2.1
 
-PVG `0.2.0` is locally committed, remains inert by default, and is not
+PVG `0.2.1` is locally committed, remains inert by default, and is not
 installed on Pattern Production. It adds:
 
 - V3 H1-only heading-reveal detection and the Runtime `0.3.0` module contract;
@@ -122,7 +126,9 @@ installed on Pattern Production. It adds:
 - verified SRI coverage for every repo-owned V3 asset in the gateway manifest;
   and
 - coexistence coverage proving an already-loaded V3 Runtime module is reused
-  without injecting a duplicate module script.
+  without injecting a duplicate module script; and
+- a late-load bridge for the legacy nav when the global `pageFunctions` queue
+  already ran before PVG registered the nav function.
 
 ## Integrity audit finding
 
@@ -146,16 +152,17 @@ custom code, or publish state was saved.
 
 | Surface | Live detection | Safety result | Matched plan |
 | --- | --- | --- | --- |
-| V1 — `/products/pxm/pim` | V1 from `.page_main.cc-v1` | Explicit and safe; observe only | Dynamic year, legacy nav, FAQ schema, legacy lazy load, Splide |
-| V2 — `/resources/partner-success-stories` | Inferred V2 from untagged `.page_main` | Correctly refused activation | Dynamic year, legacy nav, legacy lazy load, pagination |
-| Former V2L representative — `/` | V2 from `.page_main.cc-v2` | Explicit and safe as V2 | Dynamic year, legacy nav, legacy video, legacy lazy load, card animations, accordion |
+| V1 — `/products/pxm/pim` | V1 from `.page_main.cc-v1` | Browser-only gateway test passed | Dynamic year, legacy nav, FAQ schema, legacy lazy load, Splide |
+| V2 — `/` | V2 from `.page_main.cc-v2` | Browser-only gateway test passed | Dynamic year, legacy nav, legacy video, legacy lazy load, card animations, accordion |
+| Inferred V2 — `/resources/partner-success-stories` | V2 from an exact test-only route entry | Browser-only gateway test passed | Dynamic year, legacy nav, legacy lazy load, pagination |
+| V2L compatibility fixture | V2L from `.page_main.cc-v2l` | Local active test passed; no published V2L route exists | Dynamic year, legacy nav, card animations, Splide |
 | V3 — Webflow Home V3 | V3 from `.page_main_v3` | Explicit and safe; isolated active test passed | Dynamic year, marquee, Home anchor nav, case study, V3 video |
 
 Every observation-only run injected zero managed component assets.
 
-PVG `0.2.0` repeated this browser-only matrix on July 29, 2026. All five
-surfaces returned 200, PVG injected zero assets, and the observation introduced
-zero console or page errors. Pattern Production reported Runtime `0.2.0`; the
+PVG `0.2.0` completed the live browser-only matrix on July 29, 2026. The
+subsequent `0.2.1` local regression suite adds the late legacy-nav case and
+tests both prepared embeds. Pattern Production reported Runtime `0.2.0`; the
 V3 Library reported Runtime `0.3.0`.
 
 The V3 Library `/cc/type` source page currently has an unmarked `.page_main`.
@@ -166,9 +173,9 @@ the Library needs an authored V3 marker or an exact, reviewed route registry.
 The Phase 5 Notion record classifies the production homepage as V2L with
 `.cc-v2l`. The current published DOM instead contains exactly
 `page_main cc-v2` and no `.cc-v2l`. PVG follows the live marker and does not
-override it with the older classification. V2L detection remains implemented
-and locally tested as part of the V2 family, but a current live V2L
-representative is still required before V2L cutover can be cleared.
+override it with the older classification. No current public sitemap route is
+marked V2L, so V2L remains a tested compatibility path rather than a live
+cutover target.
 
 The isolated active Home V3 test loaded Video Popup `1.1.2`. Play remained
 closed while `personalization` was false, then the pending action opened
@@ -176,6 +183,76 @@ automatically after consent became true. The dialog rendered as `flex` and the
 iframe source became:
 
 `https://player.vimeo.com/video/1146670446?autoplay=1&dnt=1`
+
+## Public version-marker inventory — 2026-07-29
+
+The read-only audit scanned all 1,123 URLs in the current Pattern sitemap:
+
+| Published classification | Routes |
+| --- | ---: |
+| Explicit V2 | 819 |
+| Unmarked `.page_main`, inferred V2 | 189 |
+| Explicit V1 | 110 |
+| Explicit V3 | 1 |
+| Unknown | 4 |
+| V2L | 0 |
+
+The full route-level evidence is saved in
+`audits/pvg/2026-07-29-pattern-version-markers.json` and can be refreshed with
+`tools/audit-pattern-version-markers.mjs`.
+
+The four unknown routes are:
+
+- `/admin/consent-pro`
+- `/catalog-offer`
+- `/discover/home-copy`
+- `/resources/prep-calculator`
+
+`/home-v3` now returns 200 on `www.pattern.com` and is the one explicit V3
+route. This is a change in the published external state; PVG did not publish it.
+
+The 189 inferred-V2 routes are the remaining deterministic-detection gate for
+legacy cutover. They must receive explicit markers or be independently reviewed
+before being added to an exact route registry. PVG continues to refuse active
+delivery on them by default.
+
+## Legacy module readiness
+
+The frozen legacy assets currently referenced by PVG were reviewed for
+late-loading, duplicate loading, and authored-content fallback.
+
+| Module | Background readiness result |
+| --- | --- |
+| Dynamic year | Internal, repeat-safe |
+| Legacy H1 normalizer | Internal; subsequent scans find no extra H1 |
+| Legacy nav | Late-load gap fixed in PVG `0.2.1`; nav has its own ready marker |
+| Legacy video popup | Works when loaded after DOM ready; PVG URL dedupe prevents a second script load |
+| Brand logos | Loads after DOM ready and guards its observers |
+| FAQ schema | Guards duplicate schema and watches for late FAQ content |
+| Legacy lazy load | Runs after DOM ready; repeated attributes are harmless |
+| CTA inject | Uses execution and injected-element guards plus a content observer |
+| Table of contents | Uses `data-toc-initialized` |
+| Iframe popup | Works when loaded after DOM ready; PVG URL dedupe prevents a second script load |
+| Pagination | One capture handler per script; PVG URL dedupe prevents a second load |
+| Card animations | Late loader plus `data-card-grid-init` in the full module |
+| Splide | Dependency URL and global are deduplicated |
+
+The V3-only activation release does not take ownership of any item in this
+legacy table. It keeps `legacyPolicy="preserve"`.
+
+## Prepared V3 release and rollback
+
+The exact V3 activation code and observation rollback are documented in
+`docs/PVG-V3-RELEASE-AND-ROLLBACK.md`.
+
+The active embed:
+
+- activates only an explicit, conflict-free V3 page;
+- preserves V1, V2, and V2L;
+- keeps all current global legacy scripts installed; and
+- fails back to those existing scripts if PVG cannot load.
+
+The observation embed is the tested rollback. It adds no component assets.
 
 ## Production release boundary
 

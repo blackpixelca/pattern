@@ -1,28 +1,29 @@
 <!--
-  Pattern Version Gateway background loader.
+  Pattern Version Gateway V3 activation loader.
 
-  This template is intentionally observation-only and pins the verified PVG
-  runtime commit for installation on a safe Webflow staging surface.
+  This release activates PVG only on explicitly marked V3 pages. V1, V2, and
+  V2L keep their existing production scripts because legacyPolicy="preserve".
 
-  Keep all existing production footer scripts in place while mode="observe".
+  Keep the current legacy footer scripts installed during this release.
 -->
 <script>
   (() => {
     const selector = 'script[data-pattern-pvg-loader]';
+    const activate = () =>
+      window.PatternVersionGateway?.activate({
+        legacyPolicy: 'preserve',
+      });
 
     if (window.PatternVersionGateway?.version) {
-      window.PatternVersionGateway.observe();
+      void activate();
       return;
     }
 
     const pending = document.querySelector(selector);
     if (pending) {
-      pending.dataset.pvgMode = 'observe';
-      pending.addEventListener(
-        'load',
-        () => window.PatternVersionGateway?.observe(),
-        { once: true },
-      );
+      pending.dataset.pvgMode = 'active';
+      pending.dataset.pvgLegacyPolicy = 'preserve';
+      pending.addEventListener('load', activate, { once: true });
       return;
     }
 
@@ -34,12 +35,13 @@
     script.integrity =
       'sha384-7i5I05dfqsOHQEK5w2uS1c0du20+Xudps73oORQfwGB5Qb9BGi1jhhCru+3NcEQj';
     script.dataset.patternPvgLoader = '0.2.1';
-    script.dataset.pvgMode = 'observe';
+    script.dataset.pvgMode = 'active';
+    script.dataset.pvgLegacyPolicy = 'preserve';
     script.addEventListener(
       'error',
       () => {
         console.warn(
-          '[Pattern PVG] The observation runtime could not load. Existing production scripts remain unchanged.',
+          '[Pattern PVG] The V3 runtime could not load. Existing production scripts remain unchanged.',
         );
       },
       { once: true },
