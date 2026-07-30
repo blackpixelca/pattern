@@ -86,6 +86,25 @@
     "slider-images-css-before.html": "9ce8cab1394f3b6488f902002bbf0e3e4c5ca6a7181db13f353538d5d073b084",
     "slider-images-js-before.html": "3833772a254ce47b0232945be00b954d29733c85cc29f8eb74708c96a61d6442"
   },
+  "savedCutover": {
+    "verifiedAt": "2026-07-30T16:44:29Z",
+    "published": false,
+    "pvgVersion": "0.2.4",
+    "legacyPolicy": "gateway",
+    "runtimeCommit": "7bb2b6f2fc7ae258285fbafcd643e717b64009e1",
+    "exactReadback": {
+      "siteHead": true,
+      "siteFooter": true,
+      "portalFooter": true,
+      "sliderImagesJs": true
+    },
+    "candidateSha256": {
+      "site-head-after.html": "cd7d931b2196c17d43dc653bf1541a8e7979ec58f8d05e2558f6e033b42db07e",
+      "site-footer-after.html": "2b392bb9f8b57534b40273809daf92617859728155c1e5989e362e9a36889e10",
+      "portal-footer-after.html": "3425dfd2437d9626160a028378534e5c72f004b51ea01d74c04cdc23e0a92a64",
+      "slider-images-js-after.html": "c4c124cd1a330ea4fcc6949074f7fe1e6802215dad5dbce46fe7dc53b8d3c5a6"
+    }
+  },
   "restoreOrder": [
     "Restore site-head-before.html and site-footer-before.html.",
     "Restore portal-head-before.html and portal-footer-before.html.",
