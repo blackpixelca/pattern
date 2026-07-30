@@ -109,6 +109,12 @@ const ROUTES = [
     exerciseCountup: true,
   },
   {
+    path: "/case-study/sports-direct",
+    expectedVersion: "v2",
+    role: "New production V2 case-study item discovered after the production publish",
+    exerciseCountup: true,
+  },
+  {
     path: "/contact",
     expectedVersion: "v2",
     role: "V2 form route outside the sitemap",
