@@ -108,12 +108,13 @@ authored version marker.
 - [x] V3 heading reveal loads GSAP, ScrollTrigger, and SplitText at one aligned version.
 - [x] A V2L compatibility fixture activates the V2-family nav, card, and Splide plan.
 - [x] A legacy nav registered after `pageFunctions` has already run is executed once.
+- [x] Component-level version-like classes and attributes cannot identify the page version.
 - [x] The prepared V3 activation embed preserves V1, V2, and V2L.
 - [x] The observation embed is the tested rollback and loads no component assets.
 
-## Background candidate 0.2.1
+## Background candidate 0.2.2
 
-PVG `0.2.1` is locally committed, remains inert by default, and is not
+PVG `0.2.2` is locally committed, remains inert by default, and is not
 installed on Pattern Production. It adds:
 
 - V3 H1-only heading-reveal detection and the Runtime `0.3.0` module contract;
@@ -128,7 +129,9 @@ installed on Pattern Production. It adds:
 - coexistence coverage proving an already-loaded V3 Runtime module is reused
   without injecting a duplicate module script; and
 - a late-load bridge for the legacy nav when the global `pageFunctions` queue
-  already ran before PVG registered the nav function.
+  already ran before PVG registered the nav function; and
+- page-root-only version markers so a component-level `cc-v*` class or
+  `data-pattern-version` attribute cannot switch the whole page version.
 
 ## Integrity audit finding
 
@@ -161,7 +164,7 @@ custom code, or publish state was saved.
 Every observation-only run injected zero managed component assets.
 
 PVG `0.2.0` completed the live browser-only matrix on July 29, 2026. The
-subsequent `0.2.1` local regression suite adds the late legacy-nav case and
+subsequent `0.2.2` local regression suite adds the late legacy-nav case and
 tests both prepared embeds. Pattern Production reported Runtime `0.2.0`; the
 V3 Library reported Runtime `0.3.0`.
 
@@ -216,6 +219,10 @@ legacy cutover. They must receive explicit markers or be independently reviewed
 before being added to an exact route registry. PVG continues to refuse active
 delivery on them by default.
 
+The audit also checked version-like class tokens across every element. It found
+no current cross-version conflicts. PVG `0.2.2` nevertheless scopes detection
+to page roots so a future component class cannot become a page marker.
+
 ## Legacy module readiness
 
 The frozen legacy assets currently referenced by PVG were reviewed for
@@ -225,7 +232,7 @@ late-loading, duplicate loading, and authored-content fallback.
 | --- | --- |
 | Dynamic year | Internal, repeat-safe |
 | Legacy H1 normalizer | Internal; subsequent scans find no extra H1 |
-| Legacy nav | Late-load gap fixed in PVG `0.2.1`; nav has its own ready marker |
+| Legacy nav | Late-load gap fixed in PVG `0.2.1+`; nav has its own ready marker |
 | Legacy video popup | Works when loaded after DOM ready; PVG URL dedupe prevents a second script load |
 | Brand logos | Loads after DOM ready and guards its observers |
 | FAQ schema | Guards duplicate schema and watches for late FAQ content |

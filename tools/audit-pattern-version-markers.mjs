@@ -26,25 +26,48 @@ const extractLocations = (xml) =>
       .trim(),
   );
 
-const classify = (html) => {
+const inspectHtml = (html) => {
   const explicitVersion = html.match(
     /<(?:html|body)\b[^>]*\bdata-pattern-version=["'](v1|v2|v2l|v3)["']/i,
   )?.[1]?.toLowerCase();
-  if (explicitVersion) return explicitVersion;
 
-  const pageMainClasses = [
+  const pageMainClassLists = [
     ...html.matchAll(/\bclass=["']([^"']*\bpage_main(?:_v3)?\b[^"']*)["']/gi),
   ]
-    .map((match) => match[1].split(/\s+/))
-    .flat();
+    .map((match) => match[1].split(/\s+/));
+  const pageMainClasses = pageMainClassLists.flat();
   const classTokens = new Set(pageMainClasses);
+  const allClassTokens = new Set(
+    [...html.matchAll(/\bclass=["']([^"']*)["']/gi)]
+      .map((match) => match[1].split(/\s+/))
+      .flat()
+      .filter(Boolean),
+  );
+  const markerTokens = ['cc-v1', 'cc-v2', 'cc-v2l', 'cc-v3'].filter((token) =>
+    allClassTokens.has(token),
+  );
+  const pageId = html.match(/\bdata-wf-page=["']([^"']+)["']/i)?.[1] || null;
+  const count = (pattern) => [...html.matchAll(pattern)].length;
+  const fingerprints = {
+    v1: count(/pattern-library-v1--/gi),
+    v2: count(/pattern-library-v2--/gi),
+    v3: count(/pattern-library-v3--/gi),
+  };
 
-  if (classTokens.has('page_main_v3') || classTokens.has('cc-v3')) return 'v3';
-  if (classTokens.has('cc-v2l')) return 'v2l';
-  if (classTokens.has('cc-v2')) return 'v2';
-  if (classTokens.has('cc-v1')) return 'v1';
-  if (classTokens.has('page_main')) return 'inferred-v2';
-  return 'unknown';
+  let version = 'unknown';
+  if (explicitVersion) version = explicitVersion;
+  else if (classTokens.has('page_main_v3') || classTokens.has('cc-v3')) version = 'v3';
+  else if (classTokens.has('cc-v2l')) version = 'v2l';
+  else if (classTokens.has('cc-v2')) version = 'v2';
+  else if (classTokens.has('cc-v1')) version = 'v1';
+  else if (classTokens.has('page_main')) version = 'inferred-v2';
+
+  return {
+    version,
+    pageId,
+    markerTokens,
+    fingerprints,
+  };
 };
 
 const rootXml = await fetchText(ROOT_SITEMAP);
@@ -79,11 +102,12 @@ const worker = async () => {
         redirect: 'follow',
       });
       const html = await response.text();
+      const inspection = inspectHtml(html);
       results[index] = {
         url,
         finalUrl: response.url,
         status: response.status,
-        version: classify(html),
+        ...inspection,
       };
     } catch (error) {
       results[index] = {
@@ -102,6 +126,17 @@ await Promise.all(
 );
 
 const grouped = Object.groupBy(results, (result) => result.version);
+const inferredV2Templates = Object.entries(
+  Object.groupBy(grouped['inferred-v2'] || [], (result) => result.pageId || 'unknown'),
+)
+  .map(([pageId, rows]) => ({
+    pageId,
+    routes: rows.length,
+    v1FingerprintHits: rows.reduce((total, row) => total + row.fingerprints.v1, 0),
+    v2FingerprintHits: rows.reduce((total, row) => total + row.fingerprints.v2, 0),
+    v3FingerprintHits: rows.reduce((total, row) => total + row.fingerprints.v3, 0),
+  }))
+  .sort((a, b) => b.routes - a.routes || a.pageId.localeCompare(b.pageId));
 const report = {
   auditedAt: new Date().toISOString(),
   rootSitemap: ROOT_SITEMAP,
@@ -109,14 +144,18 @@ const report = {
   counts: Object.fromEntries(
     Object.entries(grouped).map(([version, rows]) => [version, rows.length]),
   ),
+  inferredV2Templates,
   routes: Object.fromEntries(
     Object.entries(grouped).map(([version, rows]) => [
       version,
       rows
-        .map(({ error, finalUrl, status, url }) => ({
+        .map(({ error, finalUrl, fingerprints, markerTokens, pageId, status, url }) => ({
           url,
           finalUrl,
           status,
+          pageId,
+          markerTokens,
+          fingerprints,
           ...(error ? { error } : {}),
         }))
         .sort((a, b) => a.url.localeCompare(b.url)),

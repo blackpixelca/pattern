@@ -81,7 +81,7 @@ async function createScenario({ html, config = {}, routes = [] }) {
     ...config,
   });
   await page.addScriptTag({ content: gatewaySource });
-  await page.waitForFunction(() => window.PatternVersionGateway?.version === '0.2.1');
+  await page.waitForFunction(() => window.PatternVersionGateway?.version === '0.2.2');
   await page.waitForTimeout(25);
 
   return page;
@@ -127,7 +127,7 @@ async function inspectEmbedScenario({ html, embed, routes = [] }) {
 
   await page.setContent(html, { waitUntil: 'domcontentloaded' });
   await page.addScriptTag({ content: getInlineScript(embed) });
-  await page.waitForFunction(() => window.PatternVersionGateway?.version === '0.2.1');
+  await page.waitForFunction(() => window.PatternVersionGateway?.version === '0.2.2');
   await page.waitForTimeout(25);
 
   const result = await page.evaluate(() => ({
@@ -186,6 +186,19 @@ try {
   });
   assert.equal(v2l.detection.version, 'v2l');
   assert.equal(v2l.detection.family, 'v2');
+
+  const componentVersionTokens = await inspectScenario({
+    html: `
+      <main class="page_main">
+        <div class="cc-v1" data-pattern-version="v3"></div>
+      </main>
+    `,
+    config: { mode: 'active', legacyPolicy: 'gateway' },
+  });
+  assert.equal(componentVersionTokens.detection.version, 'v2');
+  assert.equal(componentVersionTokens.detection.source, 'unmarked-page-main-fallback');
+  assert.equal(componentVersionTokens.detection.safe, false);
+  assert.equal(componentVersionTokens.activation.reason, 'unresolved-version');
 
   const observedEmbedV3 = await inspectEmbedScenario({
     html: '<main class="page_main_v3"><span data-dynamic-year>2000</span></main>',
