@@ -117,6 +117,20 @@
     "finalSitemapStatus": "absent",
     "verificationFailures": []
   },
+  "caseStudyTemplateCorrection": {
+    "templatePageId": "68224e2eae021c5c842dd3c5",
+    "previousRootClasses": ["page_main", "cc-v1"],
+    "currentRootClasses": ["page_main", "cc-v2"],
+    "publishedToStaging": true,
+    "stagingPublishedAt": "2026-07-30T17:30:53Z",
+    "publishedTemplateRoutes": 23,
+    "representativeRoutes": [
+      "/case-study/gaia",
+      "/case-study/flannels"
+    ],
+    "pvgDetection": "v2",
+    "verificationFailures": []
+  },
   "restoreOrder": [
     "Restore site-head-before.html and site-footer-before.html.",
     "Restore portal-head-before.html and portal-footer-before.html.",

@@ -1,7 +1,7 @@
 {
-  "checkedAt": "2026-07-30T17:17:10.911Z",
+  "checkedAt": "2026-07-30T17:35:23.676Z",
   "origin": "https://pattern-us.webflow.io",
-  "publishedAt": "Thu Jul 30 2026 17:16:13 GMT+0000 (Coordinated Universal Time)",
+  "publishedAt": "Thu Jul 30 2026 17:30:53 GMT+0000 (Coordinated Universal Time)",
   "homeStatus": 200,
   "sitemapStatus": 200,
   "sitemapUrlCount": 1124,
@@ -16,7 +16,7 @@
   "international": {
     "path": "/resources/international-expansion-videos",
     "status": 404,
-    "finalUrl": "https://pattern-us.webflow.io/resources/international-expansion-videos?pvg-check=1785431830729",
+    "finalUrl": "https://pattern-us.webflow.io/resources/international-expansion-videos?pvg-check=1785432923476",
     "inSitemap": false
   },
   "loader": {

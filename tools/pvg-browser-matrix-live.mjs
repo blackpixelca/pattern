@@ -98,14 +98,14 @@ const ROUTES = [
   },
   {
     path: "/case-study/gaia",
-    expectedVersion: "v1",
-    role: "V1 case-study template with count-up cards",
+    expectedVersion: "v2",
+    role: "V2 case-study template with count-up cards",
     exerciseCountup: true,
   },
   {
     path: "/case-study/flannels",
-    expectedVersion: "v1",
-    role: "New staging case-study item discovered after the corrective publish",
+    expectedVersion: "v2",
+    role: "New staging V2 case-study item discovered after the corrective publish",
     exerciseCountup: true,
   },
   {

@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-07-30T17:21:16.228Z",
+  "checkedAt": "2026-07-30T17:34:59.343Z",
   "scope": "Read-only real-browser compatibility matrix for PVG 0.2.4 on representative Pattern US V1/V2/V3 routes at https://pattern-us.webflow.io",
   "origin": "https://pattern-us.webflow.io",
   "rateLimited": false,
@@ -25,7 +25,7 @@
       "role": "V1 core product page and legacy navigation",
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/software",
-      "elapsedMs": 2814,
+      "elapsedMs": 4842,
       "title": "Pattern: Enterprise Ecommerce Software",
       "pageMainClasses": "page_main cc-v1",
       "runtimeVersion": "0.2.4",
@@ -102,7 +102,7 @@
       "role": "V1 accordion and marquee",
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/products/marketplace-accelerator-china",
-      "elapsedMs": 2557,
+      "elapsedMs": 4691,
       "title": "Marketplace Accelerator China | Pattern",
       "pageMainClasses": "page_main cc-v1",
       "runtimeVersion": "0.2.4",
@@ -184,7 +184,7 @@
       "role": "V1 CMS listing",
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/resources/blog",
-      "elapsedMs": 2580,
+      "elapsedMs": 3794,
       "title": "Ecommerce Blog | Pattern",
       "pageMainClasses": "page_main cc-v1",
       "runtimeVersion": "0.2.4",
@@ -271,7 +271,7 @@
       "role": "V1 people listing",
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/about/leadership",
-      "elapsedMs": 2471,
+      "elapsedMs": 3744,
       "title": "Executive Leadership Team | Pattern",
       "pageMainClasses": "page_main cc-v1",
       "runtimeVersion": "0.2.4",
@@ -348,7 +348,7 @@
       "role": "V1 category template",
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/category/marketplaces",
-      "elapsedMs": 2808,
+      "elapsedMs": 4059,
       "title": "Global Marketplace Management for Ecommerce | Pattern",
       "pageMainClasses": "page_main cc-v1",
       "runtimeVersion": "0.2.4",
@@ -426,7 +426,7 @@
       "exerciseCountup": true,
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/",
-      "elapsedMs": 2701,
+      "elapsedMs": 5620,
       "title": "Pattern: The #1 Global Ecommerce Accelerator",
       "pageMainClasses": "page_main cc-v2",
       "runtimeVersion": "0.2.4",
@@ -515,7 +515,7 @@
       "exerciseCountup": true,
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/products/fulfillment/middle-mile",
-      "elapsedMs": 2668,
+      "elapsedMs": 3856,
       "title": "Middle Mile Logistics for Amazon Sellers | Pattern",
       "pageMainClasses": "page_main cc-v2 u-theme-dark-v2",
       "runtimeVersion": "0.2.4",
@@ -620,7 +620,7 @@
       "exerciseCountup": true,
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/pi",
-      "elapsedMs": 4740,
+      "elapsedMs": 6448,
       "title": "Pattern Intelligence (Pi)",
       "pageMainClasses": "page_main cc-v2",
       "runtimeVersion": "0.2.4",
@@ -785,7 +785,7 @@
       "exerciseCountup": true,
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/pattern-intelligence-korea",
-      "elapsedMs": 4591,
+      "elapsedMs": 5871,
       "title": "Pattern Intelligence Korea",
       "pageMainClasses": "page_main cc-v2",
       "runtimeVersion": "0.2.4",
@@ -945,7 +945,7 @@
       "exerciseCountup": true,
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/beauty",
-      "elapsedMs": 4685,
+      "elapsedMs": 7226,
       "title": "Beauty",
       "pageMainClasses": "page_main cc-v2 u-theme-dark-v2",
       "runtimeVersion": "0.2.4",
@@ -1077,7 +1077,7 @@
       "exerciseCountup": true,
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/agentic-commerce",
-      "elapsedMs": 2632,
+      "elapsedMs": 4009,
       "title": "Pattern Agentic Commerce | Win Where AI Agents Decide",
       "pageMainClasses": "page_main cc-v2 u-theme-dark-v2",
       "runtimeVersion": "0.2.4",
@@ -1168,7 +1168,7 @@
       "exerciseSplide": true,
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/products/the-portal-studio",
-      "elapsedMs": 3332,
+      "elapsedMs": 4502,
       "title": "The Portal Studio | Pattern",
       "pageMainClasses": "page_main cc-v2 u-theme-dark-v2",
       "runtimeVersion": "0.2.4",
@@ -1238,8 +1238,8 @@
         "initialized": true,
         "trackCount": 1,
         "listCount": 1,
-        "transform": "translateX(-44.5px)",
-        "secondTransform": "translateX(-65.5px)",
+        "transform": "translateX(-42px)",
+        "secondTransform": "translateX(-63px)",
         "moving": true
       },
       "screenshot": null,
@@ -1268,7 +1268,7 @@
       "role": "V2 CMS article with table of contents",
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/blog/converses-revenue-increased-by-50-with-a-pattern-partnership",
-      "elapsedMs": 2527,
+      "elapsedMs": 3886,
       "title": "Why Brands Work With Pattern: Converse | Pattern",
       "pageMainClasses": "page_main cc-v2",
       "runtimeVersion": "0.2.4",
@@ -1301,12 +1301,12 @@
         {
           "tag": "SCRIPT",
           "module": null,
-          "src": "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/content/cta-inject.js"
+          "src": "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/interaction/lazy-load.js"
         },
         {
           "tag": "SCRIPT",
           "module": null,
-          "src": "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/interaction/lazy-load.js"
+          "src": "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/content/cta-inject.js"
         },
         {
           "tag": "SCRIPT",
@@ -1355,7 +1355,7 @@
       "role": "V2 CMS article that returned a transient 500 during the full crawl",
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/blog/analysis-americas-obsession-with-junk-food",
-      "elapsedMs": 3752,
+      "elapsedMs": 5429,
       "title": "Analysis: America's Obsession With Junk Food | Pattern",
       "pageMainClasses": "page_main cc-v2",
       "runtimeVersion": "0.2.4",
@@ -1383,22 +1383,22 @@
         {
           "tag": "SCRIPT",
           "module": null,
-          "src": "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/content/cta-inject.js"
-        },
-        {
-          "tag": "SCRIPT",
-          "module": null,
           "src": "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/nav/nav.js"
         },
         {
           "tag": "SCRIPT",
           "module": null,
-          "src": "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/content/toc.js"
+          "src": "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/content/cta-inject.js"
         },
         {
           "tag": "SCRIPT",
           "module": null,
           "src": "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/interaction/lazy-load.js"
+        },
+        {
+          "tag": "SCRIPT",
+          "module": null,
+          "src": "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/content/toc.js"
         }
       ],
       "unmanagedLegacyAssets": [],
@@ -1442,7 +1442,7 @@
       "role": "V2 CMS article that returned a transient 500 during the full crawl",
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/blog/the-halo-effect",
-      "elapsedMs": 3697,
+      "elapsedMs": 2523,
       "title": "The halo effect and its impact on your brand",
       "pageMainClasses": "page_main cc-v2",
       "runtimeVersion": "0.2.4",
@@ -1525,21 +1525,21 @@
     },
     {
       "path": "/case-study/gaia",
-      "expectedVersion": "v1",
-      "role": "V1 case-study template with count-up cards",
+      "expectedVersion": "v2",
+      "role": "V2 case-study template with count-up cards",
       "exerciseCountup": true,
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/case-study/gaia",
-      "elapsedMs": 4404,
+      "elapsedMs": 4555,
       "title": "",
-      "pageMainClasses": "page_main cc-v1",
+      "pageMainClasses": "page_main cc-v2",
       "runtimeVersion": "0.2.4",
       "detection": {
-        "version": "v1",
-        "family": "v1",
+        "version": "v2",
+        "family": "v2",
         "source": "page-marker",
         "evidence": [
-          ".page_main.cc-v1"
+          ".page_main.cc-v2"
         ],
         "confidence": "high",
         "conflicts": [],
@@ -1663,21 +1663,21 @@
     },
     {
       "path": "/case-study/flannels",
-      "expectedVersion": "v1",
-      "role": "New staging case-study item discovered after the corrective publish",
+      "expectedVersion": "v2",
+      "role": "New staging V2 case-study item discovered after the corrective publish",
       "exerciseCountup": true,
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/case-study/flannels",
-      "elapsedMs": 4516,
+      "elapsedMs": 4500,
       "title": "How Flannels Boosted ROAS 107% | Pattern Case Study",
-      "pageMainClasses": "page_main cc-v1",
+      "pageMainClasses": "page_main cc-v2",
       "runtimeVersion": "0.2.4",
       "detection": {
-        "version": "v1",
-        "family": "v1",
+        "version": "v2",
+        "family": "v2",
         "source": "page-marker",
         "evidence": [
-          ".page_main.cc-v1"
+          ".page_main.cc-v2"
         ],
         "confidence": "high",
         "conflicts": [],
@@ -1805,7 +1805,7 @@
       "role": "V2 form route outside the sitemap",
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/contact/marketplace-accelerator",
-      "elapsedMs": 2825,
+      "elapsedMs": 4083,
       "title": "Contact Us | Pattern",
       "pageMainClasses": "page_main cc-v2",
       "runtimeVersion": "0.2.4",
@@ -1905,7 +1905,7 @@
       "exerciseCountup": true,
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/performance-review",
-      "elapsedMs": 2604,
+      "elapsedMs": 4187,
       "title": "Performance Review Request | Pattern",
       "pageMainClasses": "page_main cc-v2",
       "runtimeVersion": "0.2.4",
@@ -1988,7 +1988,7 @@
       "role": "Newly explicit V2 login page",
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/login",
-      "elapsedMs": 2493,
+      "elapsedMs": 3521,
       "title": "Login | Pattern",
       "pageMainClasses": "page_main cc-v2",
       "runtimeVersion": "0.2.4",
@@ -2065,7 +2065,7 @@
       "role": "Newly explicit V2 News template",
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/news/31-of-aussie-online-shoppers-have-access-to-amazon-prime-up-by-63-in-less",
-      "elapsedMs": 2553,
+      "elapsedMs": 4164,
       "title": "31% of Aussie Online Shoppers Have Access to Amazon Prime, up by 63% in Less Than A Year",
       "pageMainClasses": "page_main cc-v2 is-bkg-white",
       "runtimeVersion": "0.2.4",
@@ -2147,7 +2147,7 @@
       "role": "Newly explicit V2 Topics template",
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/topics/3pl-fulfillment",
-      "elapsedMs": 2549,
+      "elapsedMs": 4380,
       "title": "Scalable 3PL Fulfillment | E-commerce Logistics & Order Fulfillment",
       "pageMainClasses": "page_main cc-v2 is-bkg-white",
       "runtimeVersion": "0.2.4",
@@ -2175,11 +2175,6 @@
         {
           "tag": "SCRIPT",
           "module": null,
-          "src": "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/content/toc.js"
-        },
-        {
-          "tag": "SCRIPT",
-          "module": null,
           "src": "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/nav/nav.js"
         },
         {
@@ -2191,6 +2186,11 @@
           "tag": "SCRIPT",
           "module": null,
           "src": "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/interaction/lazy-load.js"
+        },
+        {
+          "tag": "SCRIPT",
+          "module": null,
+          "src": "https://cdn.jsdelivr.net/gh/specterstudio/pattern@v1.0.8/webflow/pattern.com/scripts/content/toc.js"
         }
       ],
       "unmanagedLegacyAssets": [],
@@ -2234,7 +2234,7 @@
       "role": "Newly explicit V2 Reports template",
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/reports/2026-state-of-fulfillment",
-      "elapsedMs": 2539,
+      "elapsedMs": 3480,
       "title": "The 2026 state of fulfillment report",
       "pageMainClasses": "page_main cc-v2 is-bkg-white",
       "runtimeVersion": "0.2.4",
@@ -2311,7 +2311,7 @@
       "role": "Newly explicit V2 Whitepaper template",
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/whitepaper/fulfillment-pet-brands",
-      "elapsedMs": 2460,
+      "elapsedMs": 3631,
       "title": "Pattern",
       "pageMainClasses": "page_main cc-v2 is-bkg-white",
       "runtimeVersion": "0.2.4",
@@ -2389,7 +2389,7 @@
       "exerciseCountup": true,
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/partnership/asgtg",
-      "elapsedMs": 2611,
+      "elapsedMs": 3713,
       "title": "Pattern Fulfillment for ASGTG",
       "pageMainClasses": "page_main cc-v1",
       "runtimeVersion": "0.2.4",
@@ -2474,7 +2474,7 @@
       "exerciseCountup": true,
       "status": 200,
       "finalUrl": "https://pattern-us.webflow.io/home-v3",
-      "elapsedMs": 6411,
+      "elapsedMs": 8421,
       "title": "Home V3",
       "pageMainClasses": "page_main_v3",
       "runtimeVersion": "0.2.4",
