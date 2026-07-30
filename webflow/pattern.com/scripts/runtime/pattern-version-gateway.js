@@ -13,7 +13,7 @@
   'use strict';
 
   const GLOBAL_NAME = 'PatternVersionGateway';
-  const VERSION = '0.2.3';
+  const VERSION = '0.2.4';
   const EVENT_PREFIX = 'pattern:pvg';
   const ALL_VERSIONS = ['v1', 'v2', 'v2l', 'v3'];
   const LEGACY_VERSIONS = ['v1', 'v2', 'v2l'];
@@ -619,7 +619,7 @@
     },
     {
       id: 'card-load-animations',
-      versions: ['v2', 'v2l', 'v3'],
+      versions: ALL_VERSIONS,
       selector: '[card-grid] [card-load]',
       script: {
         src: `${CARD_LOAD_BASE}/scripts/interaction/card-load-animations-v10.js`,
@@ -631,6 +631,7 @@
       versions: LEGACY_VERSIONS,
       selector: '.splide',
       dependencies: ['splide'],
+      init: () => initializeRegisteredPageFunction('splideSlider'),
     },
     {
       id: 'marquee',

@@ -18,6 +18,10 @@ const headingRevealSource = await fs.readFile(
   ),
   'utf8',
 );
+const accordionSource = await fs.readFile(
+  new URL('../webflow/pattern.com/scripts/interaction/accordion.js', import.meta.url),
+  'utf8',
+);
 const gatewayLocalAssetSources = await Promise.all(
   [
     '../webflow/pattern.com/scripts/interaction/marquee.js',
@@ -46,10 +50,13 @@ const gatewayV3ActiveEmbed = await fs.readFile(
 );
 const toSRI = (source) =>
   `sha384-${crypto.createHash('sha384').update(source).digest('base64')}`;
+const allowUnreleasedRuntime = process.env.PVG_ALLOW_UNRELEASED_RUNTIME === '1';
 const getInlineScript = (embed) => {
   const match = embed.match(/<script>([\s\S]*?)<\/script>/);
   assert.ok(match, 'Expected one inline script in the embed.');
-  return match[1];
+  return allowUnreleasedRuntime
+    ? match[1].replace(/sha384-[A-Za-z0-9+/=]+/g, toSRI(gatewaySource))
+    : match[1];
 };
 
 const browser = await chromium.launch({ headless: true });
@@ -81,7 +88,7 @@ async function createScenario({ html, config = {}, routes = [] }) {
     ...config,
   });
   await page.addScriptTag({ content: gatewaySource });
-  await page.waitForFunction(() => window.PatternVersionGateway?.version === '0.2.3');
+  await page.waitForFunction(() => window.PatternVersionGateway?.version === '0.2.4');
   await page.waitForTimeout(25);
 
   return page;
@@ -127,7 +134,7 @@ async function inspectEmbedScenario({ html, embed, routes = [] }) {
 
   await page.setContent(html, { waitUntil: 'domcontentloaded' });
   await page.addScriptTag({ content: getInlineScript(embed) });
-  await page.waitForFunction(() => window.PatternVersionGateway?.version === '0.2.3');
+  await page.waitForFunction(() => window.PatternVersionGateway?.version === '0.2.4');
   await page.waitForTimeout(25);
 
   const result = await page.evaluate(() => ({
@@ -143,8 +150,10 @@ async function inspectEmbedScenario({ html, embed, routes = [] }) {
 }
 
 try {
-  assert.ok(gatewayEmbed.includes(toSRI(gatewaySource)));
-  assert.ok(gatewayV3ActiveEmbed.includes(toSRI(gatewaySource)));
+  if (!allowUnreleasedRuntime) {
+    assert.ok(gatewayEmbed.includes(toSRI(gatewaySource)));
+    assert.ok(gatewayV3ActiveEmbed.includes(toSRI(gatewaySource)));
+  }
   assert.match(gatewayEmbed, /pattern@[0-9a-f]{40}\/webflow\/pattern\.com\/scripts\/runtime/);
   assert.match(
     gatewayV3ActiveEmbed,
@@ -402,13 +411,41 @@ try {
 
   const activeLegacyPage = await createScenario({
     html: `
+      <script>
+        window.pageFunctions = {
+          added: true,
+          executed: {},
+          functions: {},
+          addFunction(id, fn) {
+            if (!this.functions[id]) this.functions[id] = fn;
+          },
+        };
+        window.pageFunctions.addFunction('splideSlider', () => {
+          new window.Splide('.splide').mount();
+        });
+      </script>
       <main class="page_main cc-v1">
         <div class="splide"></div>
         <div class="splide"></div>
+        <div card-grid>
+          <article card-load="count-up"><span stat-count-up>123</span></article>
+        </div>
       </main>
     `,
     config: { mode: 'active', legacyPolicy: 'gateway' },
     routes: [
+      {
+        url: '**/pattern@aa2e661b1aad8fa6d3fcc1d7c0a0aa3347cff1b6/webflow/pattern.com/scripts/interaction/card-load-animations-v10.js',
+        body: 'window.__pvgV1CardLoads = (window.__pvgV1CardLoads || 0) + 1;',
+      },
+      {
+        url: '**/gsap/3.15.0/gsap.min.js',
+        body: 'window.gsap = { registerPlugin() {} };',
+      },
+      {
+        url: '**/gsap/3.15.0/ScrollTrigger.min.js',
+        body: 'window.ScrollTrigger = {};',
+      },
       {
         url: '**/@splidejs/splide@4.1.4/dist/css/splide.min.css',
         contentType: 'text/css',
@@ -416,14 +453,23 @@ try {
       },
       {
         url: '**/@splidejs/splide@4.1.4/dist/js/splide.min.js',
-        body: 'window.Splide = function Splide() {};',
+        body: `
+          window.Splide = function Splide() {};
+          window.Splide.prototype.mount = function mount() {
+            window.__pvgSplideMounts = (window.__pvgSplideMounts || 0) + 1;
+            return this;
+          };
+        `,
       },
     ],
   });
   await activeLegacyPage.waitForFunction(
-    () =>
-      window.PatternVersionGateway.inspect().modules.find((module) => module.id === 'splide')
-        ?.status === 'ready',
+    () => {
+      const modules = window.PatternVersionGateway.inspect().modules;
+      return ['card-load-animations', 'splide'].every(
+        (id) => modules.find((module) => module.id === id)?.status === 'ready',
+      );
+    },
   );
   const activeLegacy = await activeLegacyPage.evaluate(() => ({
     activation: window.PatternVersionGateway.inspect().activation,
@@ -433,10 +479,16 @@ try {
     managedStyles: document.querySelectorAll(
       'link[data-pattern-pvg-asset="dependency:splide:style"]',
     ).length,
+    cardLoads: window.__pvgV1CardLoads,
+    splideMounts: window.__pvgSplideMounts,
+    splideRegistryExecuted: window.pageFunctions.executed.splideSlider,
   }));
   assert.equal(activeLegacy.activation.allowed, true);
   assert.equal(activeLegacy.managedScripts, 1);
   assert.equal(activeLegacy.managedStyles, 1);
+  assert.equal(activeLegacy.cardLoads, 1);
+  assert.equal(activeLegacy.splideMounts, 1);
+  assert.equal(activeLegacy.splideRegistryExecuted, true);
   await activeLegacyPage.close();
 
   const activeV2LPage = await createScenario({
@@ -545,6 +597,155 @@ try {
     false,
   );
   await activeV2LPage.close();
+
+  for (const version of ['v1', 'v2']) {
+    const activeAccordionPage = await createScenario({
+      html: `
+        <main class="page_main cc-${version}">
+          <div
+            class="pattern-library-v2--accordion_wrap"
+            data-open-by-default="1"
+          >
+            <div class="pattern-library-v2--accordion_list">
+              <article class="pattern-library-v2--accordion_component">
+                <button class="pattern-library-v2--accordion_toggle_button">
+                  First question
+                </button>
+                <div class="pattern-library-v2--accordion_content_wrap">
+                  First answer
+                </div>
+              </article>
+              <article class="pattern-library-v2--accordion_component">
+                <button class="pattern-library-v2--accordion_toggle_button">
+                  Second question
+                </button>
+                <div class="pattern-library-v2--accordion_content_wrap">
+                  Second answer
+                </div>
+              </article>
+            </div>
+          </div>
+        </main>
+      `,
+      config: { mode: 'active', legacyPolicy: 'gateway' },
+      routes: [
+        {
+          url: '**/gsap/3.15.0/gsap.min.js',
+          body: `
+            window.gsap = {
+              timeline(options) {
+                let target;
+                return {
+                  fromTo(element) {
+                    target = element;
+                    return this;
+                  },
+                  invalidate() {
+                    return this;
+                  },
+                  play() {
+                    if (target) {
+                      target.style.display = 'block';
+                      target.style.height = 'auto';
+                    }
+                    options.onComplete?.();
+                    return this;
+                  },
+                  reverse() {
+                    options.onReverseComplete?.();
+                    return this;
+                  },
+                  progress() {
+                    if (target) {
+                      target.style.display = 'block';
+                      target.style.height = 'auto';
+                    }
+                    options.onComplete?.();
+                    return this;
+                  },
+                };
+              },
+            };
+          `,
+        },
+        {
+          url: '**/scripts/interaction/accordion.js',
+          body: accordionSource,
+        },
+      ],
+    });
+
+    await activeAccordionPage.waitForFunction(
+      () =>
+        document.querySelector('[class*="accordion_wrap"]')?.dataset
+          .accordionInitialized === 'true',
+    );
+
+    const getAccordionState = () =>
+      activeAccordionPage.evaluate(() => ({
+        module: window.PatternVersionGateway
+          .inspect()
+          .modules.find((candidate) => candidate.id === 'accordion'),
+        cards: [...document.querySelectorAll('[class*="accordion_component"]')].map(
+          (card) => {
+            const button = card.querySelector('[class*="accordion_toggle_button"]');
+            const panel = card.querySelector('[class*="accordion_content_wrap"]');
+            return {
+              active: card.classList.contains('is-active'),
+              legacyActive: card.classList.contains('pattern-library-v2--is-active'),
+              expanded: button.getAttribute('aria-expanded'),
+              controls: button.getAttribute('aria-controls'),
+              panelId: panel.id,
+              labelledBy: panel.getAttribute('aria-labelledby'),
+              buttonId: button.id,
+              display: panel.style.display,
+              height: panel.style.height,
+            };
+          },
+        ),
+      }));
+
+    const defaultOpenAccordion = await getAccordionState();
+    assert.equal(defaultOpenAccordion.module.status, 'ready');
+    assert.equal(defaultOpenAccordion.cards[0].active, true);
+    assert.equal(defaultOpenAccordion.cards[0].legacyActive, true);
+    assert.equal(defaultOpenAccordion.cards[0].expanded, 'true');
+    assert.equal(defaultOpenAccordion.cards[0].display, 'block');
+    assert.equal(defaultOpenAccordion.cards[0].height, 'auto');
+    assert.equal(
+      defaultOpenAccordion.cards[0].controls,
+      defaultOpenAccordion.cards[0].panelId,
+    );
+    assert.equal(
+      defaultOpenAccordion.cards[0].labelledBy,
+      defaultOpenAccordion.cards[0].buttonId,
+    );
+    assert.equal(defaultOpenAccordion.cards[1].active, false);
+    assert.equal(defaultOpenAccordion.cards[1].expanded, 'false');
+    assert.equal(defaultOpenAccordion.cards[1].display, 'none');
+    assert.equal(defaultOpenAccordion.cards[1].height, '0px');
+
+    await activeAccordionPage.click(
+      '[class*="accordion_component"]:nth-child(2) [class*="accordion_toggle_button"]',
+    );
+    const switchedAccordion = await getAccordionState();
+    assert.equal(switchedAccordion.cards[0].active, false);
+    assert.equal(switchedAccordion.cards[0].expanded, 'false');
+    assert.equal(switchedAccordion.cards[0].display, 'none');
+    assert.equal(switchedAccordion.cards[1].active, true);
+    assert.equal(switchedAccordion.cards[1].expanded, 'true');
+    assert.equal(switchedAccordion.cards[1].display, 'block');
+
+    await activeAccordionPage.click(
+      '[class*="accordion_component"]:nth-child(2) [class*="accordion_toggle_button"]',
+    );
+    const closedAccordion = await getAccordionState();
+    assert.equal(closedAccordion.cards[1].active, false);
+    assert.equal(closedAccordion.cards[1].expanded, 'false');
+    assert.equal(closedAccordion.cards[1].display, 'none');
+    assert.equal(closedAccordion.cards[1].height, '0px');
+    await activeAccordionPage.close();
+  }
 
   const activeV3HeadingPage = await createScenario({
     html: `

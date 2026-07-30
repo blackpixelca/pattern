@@ -108,9 +108,27 @@ authored version marker.
 - [x] V3 heading reveal loads GSAP, ScrollTrigger, and SplitText at one aligned version.
 - [x] A V2L compatibility fixture activates the V2-family nav, card, and Splide plan.
 - [x] A legacy nav registered after `pageFunctions` has already run is executed once.
+- [x] V1 card-load/count-up markup activates the fixed card animation module.
+- [x] A registered legacy `splideSlider` callback runs once after Splide is available.
+- [x] V1 and V2 accordion fixtures preserve default-open, switching, close, and ARIA behavior.
 - [x] Component-level version-like classes and attributes cannot identify the page version.
 - [x] The prepared V3 activation embed preserves V1, V2, and V2L.
 - [x] The observation embed is the tested rollback and loads no component assets.
+
+## Legacy cutover candidate 0.2.4
+
+PVG `0.2.4` closes the two runtime ownership gaps found during the Pattern US
+legacy-script removal audit:
+
+- V1 pages with `[card-grid] [card-load]` now receive the same fixed,
+  commit-pinned card/count-up module already used by V2, V2L, and V3.
+- Legacy pages with `.splide` load Splide first and then execute the registered
+  `pageFunctions.functions.splideSlider` callback once.
+
+The compatibility suite now exercises V1 card/count-up ownership, registered
+Splide execution, and the current Accordion `1.1.0` behavior on explicit V1
+and V2 fixtures. The Pattern US staging cutover must retain the shared
+`pageFunctions` registry and executor during the first removal trial.
 
 ## Countup asset pin 0.2.3
 
