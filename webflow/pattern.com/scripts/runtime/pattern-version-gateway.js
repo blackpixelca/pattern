@@ -13,7 +13,7 @@
   'use strict';
 
   const GLOBAL_NAME = 'PatternVersionGateway';
-  const VERSION = '0.2.0';
+  const VERSION = '0.2.1';
   const EVENT_PREFIX = 'pattern:pvg';
   const ALL_VERSIONS = ['v1', 'v2', 'v2l', 'v3'];
   const LEGACY_VERSIONS = ['v1', 'v2', 'v2l'];
@@ -502,6 +502,19 @@
     });
   };
 
+  const initializeRegisteredPageFunction = (id) => {
+    const registry = window.pageFunctions;
+    const registeredFunction = registry?.functions?.[id];
+
+    if (typeof registeredFunction !== 'function' || registry.executed?.[id]) return;
+
+    registeredFunction();
+
+    if (registry.executed && typeof registry.executed === 'object') {
+      registry.executed[id] = true;
+    }
+  };
+
   const modules = [
     {
       id: 'dynamic-year',
@@ -527,6 +540,7 @@
           src: `${LEGACY_BASE}/styles/nav.css`,
         },
       ],
+      init: () => initializeRegisteredPageFunction('nav'),
     },
     {
       id: 'legacy-video-popup',
