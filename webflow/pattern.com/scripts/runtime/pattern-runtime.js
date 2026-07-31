@@ -571,7 +571,7 @@
       global: 'PatternVideoPopup',
       script: {
         src: '../media/video-popup.js',
-        integrity: 'sha384-DDstu5sehfzRF8Q5vas7D9gM22r6dbpdz2D/E/97eZEmLk6T3SqtSkYjC57anqc2',
+        integrity: 'sha384-jpBKR1ReiRnP/iFNzzwjcvBsSZm0yL6lH/5Cmx8cJI6BFw+hOjk7jEUttSYLSGYr',
       },
     });
   }
