@@ -341,20 +341,22 @@ await run('Consumer Runtime and PVG share V3 modules without duplicate scripts',
   page.on('console', (message) => {
     if (message.type() === 'error') consoleErrors.push(message.text());
   });
-  await page.route('**/scripts/media/video-popup.js', (route) =>
-    route.fulfill({
+  await page.route('**/scripts/media/video-popup.js', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 75));
+    return route.fulfill({
       contentType: 'application/javascript',
       headers: { 'access-control-allow-origin': '*' },
       body: videoPopupSource,
-    }),
-  );
-  await page.route('**/scripts/media/video-preview.js', (route) =>
-    route.fulfill({
+    });
+  });
+  await page.route('**/scripts/media/video-preview.js', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 75));
+    return route.fulfill({
       contentType: 'application/javascript',
       headers: { 'access-control-allow-origin': '*' },
       body: videoPreviewSource,
-    }),
-  );
+    });
+  });
   await page.setContent(`
     <main class="page_main_v3">
       <div class="pattern-library-v3--video_player_wrap">
@@ -378,9 +380,6 @@ await run('Consumer Runtime and PVG share V3 modules without duplicate scripts',
     };
   });
   await page.addScriptTag({ content: consumerSource });
-  await page.waitForFunction(
-    () => window.PatternVideoPopup?.version === '1.1.3' && window.PatternVideoPreview,
-  );
   await page.addScriptTag({ content: gatewaySource });
   await page.waitForFunction(
     () =>

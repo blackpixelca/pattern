@@ -230,13 +230,17 @@
             options.matchExisting(script, url)),
       );
 
-      if (existing?.dataset.patternRuntimeLoaded === 'true') {
+      if (
+        existing?.dataset.patternAssetLoaded === 'true' ||
+        existing?.dataset.patternRuntimeLoaded === 'true'
+      ) {
         resolve(existing);
         return;
       }
 
       const script = existing || document.createElement('script');
       const finish = () => {
+        script.dataset.patternAssetLoaded = 'true';
         script.dataset.patternRuntimeLoaded = 'true';
         resolve(script);
       };

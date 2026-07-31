@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-07-31T16:10:26.274Z",
+  "checkedAt": "2026-07-31T16:19:00.132Z",
   "runtimePath": "/Users/kenneth/_Projects/pattern/webflow/pattern.com/scripts/runtime/pattern-runtime-consumer-0.2.1.js",
   "blockedPublishedGlobals": [
     "https://cdn.jsdelivr.net/npm/@finsweet/attributes@2/attributes.js",
@@ -131,7 +131,7 @@
           }
         ],
         "selectorCounts": {
-          "[fs-list-element]": 185,
+          "[fs-list-element]": 171,
           "[fs-scrolldisable-element]": 1
         },
         "attributesVersion": "2.7.1",

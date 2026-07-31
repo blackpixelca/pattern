@@ -306,21 +306,35 @@
     const promise = new Promise((resolve, reject) => {
       const existing = [...document.scripts].find((script) => script.src === url);
 
-      if (existing) {
+      if (
+        existing?.dataset.patternAssetLoaded === 'true' ||
+        existing?.dataset.patternRuntimeLoaded === 'true'
+      ) {
         resolve(existing);
         return;
       }
 
-      const script = document.createElement('script');
-      script.src = url;
-      script.async = asset.async ?? false;
-      setAssetAttributes(script, asset, options.id);
-      script.addEventListener('load', () => resolve(script), { once: true });
+      const script = existing || document.createElement('script');
+      script.addEventListener(
+        'load',
+        () => {
+          script.dataset.patternAssetLoaded = 'true';
+          script.dataset.patternPvgLoaded = 'true';
+          resolve(script);
+        },
+        { once: true },
+      );
       script.addEventListener(
         'error',
         () => reject(new Error(`Failed to load script: ${url}`)),
         { once: true },
       );
+
+      if (existing) return;
+
+      script.src = url;
+      script.async = asset.async ?? false;
+      setAssetAttributes(script, asset, options.id);
       document.head.appendChild(script);
     });
 
