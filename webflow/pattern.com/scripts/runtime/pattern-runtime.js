@@ -12,6 +12,14 @@
     '[data-heading-reveal="true"][data-wf--typography-heading--font-style="h1"]',
     '[data-heading-reveal="true"][data-wf--pattern-library-v3--typography-heading--font-style="h1"]',
   ].join(',');
+  const FINSWEET_LIST_SELECTOR = '[fs-list-element]';
+  const FINSWEET_SCROLL_DISABLE_SELECTOR = '[fs-scrolldisable-element]';
+  const FINSWEET_SOCIAL_SHARE_SELECTOR = '[fs-socialshare-element]';
+  const V3_VIDEO_PLAYER_ROOT_SELECTOR = [
+    '[class~="video_player_wrap"]',
+    '[class*="--video_player_wrap "]',
+    '[class$="--video_player_wrap"]',
+  ].join(',');
   const currentScript = document.currentScript;
   const existingRuntime = window[GLOBAL_NAME];
 
@@ -300,6 +308,25 @@
     return Boolean(scope.querySelector?.(definition.selector));
   };
 
+  const collectMatches = (scope, selector) => {
+    const matches = [];
+    if (scope?.nodeType === Node.ELEMENT_NODE && scope.matches?.(selector)) {
+      matches.push(scope);
+    }
+    scope?.querySelectorAll?.(selector).forEach((element) => matches.push(element));
+    return matches;
+  };
+
+  const collectVideoPlayerRoots = (scope) => {
+    const roots = collectMatches(scope, V3_VIDEO_PLAYER_ROOT_SELECTOR);
+    const closest =
+      scope?.nodeType === Node.ELEMENT_NODE
+        ? scope.closest?.(V3_VIDEO_PLAYER_ROOT_SELECTOR)
+        : null;
+    if (closest && !roots.includes(closest)) roots.unshift(closest);
+    return roots;
+  };
+
   const appliesToVersion = (definition, version) => {
     const versions = definition.versions || ALL_VERSIONS;
     return versions === '*' || versions.includes(version);
@@ -334,6 +361,91 @@
       replacement.innerHTML = heading.innerHTML;
       heading.replaceWith(replacement);
     });
+  };
+
+  const createFinsweetV2Feature = (feature, selector) => {
+    const seen = new WeakSet();
+    let initialized = false;
+    let restartPromise = null;
+
+    return {
+      async init(scope = document) {
+        const matches = collectMatches(scope, selector);
+        const hasNewMatches = matches.some((element) => {
+          if (seen.has(element)) return false;
+          seen.add(element);
+          return true;
+        });
+        if (!hasNewMatches) return;
+
+        const manager = window.FinsweetAttributes;
+        if (!manager?.load) {
+          throw new Error(`Finsweet Attributes is unavailable for "${feature}".`);
+        }
+
+        if (!initialized) {
+          await manager.load(feature);
+          await manager.modules?.[feature]?.loading;
+          initialized = true;
+          return;
+        }
+
+        const restart = manager.modules?.[feature]?.restart;
+        if (typeof restart !== 'function') return;
+
+        if (!restartPromise) {
+          restartPromise = Promise.resolve(restart()).finally(() => {
+            restartPromise = null;
+          });
+        }
+        await restartPromise;
+      },
+    };
+  };
+
+  const createFinsweetSocialShareFeature = () => {
+    const seen = new WeakSet();
+    let initialized = false;
+    let restartPromise = null;
+
+    return {
+      async init(scope = document) {
+        const matches = collectMatches(scope, FINSWEET_SOCIAL_SHARE_SELECTOR);
+        const hasNewMatches = matches.some((element) => {
+          if (seen.has(element)) return false;
+          seen.add(element);
+          return true;
+        });
+        if (!hasNewMatches) return;
+
+        const socialShare = window.fsAttributes?.socialshare;
+        if (typeof socialShare?.init !== 'function') {
+          throw new Error('Finsweet Social Share is unavailable.');
+        }
+
+        const runtimeOwnedScript = document.querySelector(
+          'script[data-pattern-runtime-asset="finsweet-social-share-v1:script"]' +
+            '[fs-attributes-preventload]',
+        );
+
+        if (!initialized) {
+          if (runtimeOwnedScript) await socialShare.init();
+          else await socialShare.loading;
+          initialized = true;
+          return;
+        }
+
+        if (!restartPromise) {
+          restartPromise = (async () => {
+            socialShare.destroy?.();
+            await socialShare.init();
+          })().finally(() => {
+            restartPromise = null;
+          });
+        }
+        await restartPromise;
+      },
+    };
   };
 
   const initializeRegisteredPageFunction = (id) => {
@@ -387,6 +499,13 @@
   const setAssetAttributes = (element, options = {}) => {
     element.setAttribute('data-pattern-runtime-asset', options.id || '');
 
+    if (options.type) element.type = options.type;
+
+    Object.entries(options.attributes || {}).forEach(([name, value]) => {
+      if (value === false || value == null) return;
+      element.setAttribute(name, value === true ? '' : String(value));
+    });
+
     if (options.integrity) {
       element.integrity = options.integrity;
       element.crossOrigin = options.crossOrigin || 'anonymous';
@@ -403,7 +522,12 @@
     if (scriptPromises.has(url)) return scriptPromises.get(url);
 
     const promise = new Promise((resolve, reject) => {
-      const existing = [...document.scripts].find((script) => script.src === url);
+      const existing = [...document.scripts].find(
+        (script) =>
+          script.src === url ||
+          (typeof options.matchExisting === 'function' &&
+            options.matchExisting(script, url)),
+      );
 
       if (existing?.dataset.patternRuntimeLoaded === 'true') {
         resolve(existing);
@@ -907,6 +1031,60 @@
     ],
   });
 
+  registerDependency({
+    id: 'finsweet-attributes-v2',
+    global: 'FinsweetAttributes',
+    scripts: [
+      {
+        src: 'https://cdn.jsdelivr.net/npm/@finsweet/attributes@2.7.1/attributes.js',
+        type: 'module',
+        integrity:
+          'sha384-xUNsiuzyRX1VYBNfbdrbjkq3Ti55JX/QAqCx7D88OakMPmepdkAsMj8bv1aa5fsj',
+        crossOrigin: 'anonymous',
+        matchExisting: (script) => {
+          try {
+            const url = new URL(script.src);
+            return (
+              url.hostname === 'cdn.jsdelivr.net' &&
+              url.pathname.startsWith('/npm/@finsweet/attributes@') &&
+              url.pathname.endsWith('/attributes.js')
+            );
+          } catch {
+            return false;
+          }
+        },
+      },
+    ],
+  });
+
+  registerDependency({
+    id: 'finsweet-social-share-v1',
+    global: 'fsAttributes.socialshare',
+    scripts: [
+      {
+        src: 'https://cdn.jsdelivr.net/npm/@finsweet/attributes-socialshare@1.3.2/socialshare.js',
+        integrity:
+          'sha384-D2S3kvjqou2OO4E2xTXD1Pg9dxpLd68gdZr0CVgndB9Grh/lCwGqUsUe7vPZT/wC',
+        crossOrigin: 'anonymous',
+        attributes: {
+          'fs-attributes-preventload': '',
+        },
+        matchExisting: (script) => {
+          try {
+            const url = new URL(script.src);
+            return (
+              url.hostname === 'cdn.jsdelivr.net' &&
+              url.pathname.startsWith('/npm/@finsweet/attributes-socialshare@') &&
+              url.pathname.endsWith('/socialshare.js')
+            );
+          } catch {
+            return false;
+          }
+        },
+      },
+    ],
+  });
+
   if (!config.disableDefaults) {
     register({
       id: 'dynamic-year',
@@ -915,6 +1093,30 @@
       api: {
         init: updateDynamicYears,
       },
+    });
+
+    register({
+      id: 'finsweet-list',
+      versions: ALL_VERSIONS,
+      selector: FINSWEET_LIST_SELECTOR,
+      dependencies: ['finsweet-attributes-v2'],
+      api: createFinsweetV2Feature('list', FINSWEET_LIST_SELECTOR),
+    });
+
+    register({
+      id: 'finsweet-scroll-disable',
+      versions: ALL_VERSIONS,
+      selector: FINSWEET_SCROLL_DISABLE_SELECTOR,
+      dependencies: ['finsweet-attributes-v2'],
+      api: createFinsweetV2Feature('scrolldisable', FINSWEET_SCROLL_DISABLE_SELECTOR),
+    });
+
+    register({
+      id: 'finsweet-social-share',
+      versions: ALL_VERSIONS,
+      selector: FINSWEET_SOCIAL_SHARE_SELECTOR,
+      dependencies: ['finsweet-social-share-v1'],
+      api: createFinsweetSocialShareFeature(),
     });
 
     register({
@@ -1113,9 +1315,10 @@
       global: 'PatternCaseStudyCMS',
       script: {
         src: '../content/case-study-cms-slider.js',
-        integrity: 'sha384-xSQ424AnGtJyUNsiYYwMcewaeftzbWWyOJfD+kHvpRdzkNz0mHSdXsNjdGzYwl/b',
+        integrity: 'sha384-5+IGR8N62Hohu6K23CDo9/OWbL6m5Pxv1mPVVFQwd+B+u1yOC1x+94XM0esaP13d',
       },
-      dependencies: ['swiper', 'gsap'],
+      // The module requests Swiper and GSAP when its V3 root approaches the
+      // viewport, keeping both dependencies out of the initial page scan.
       initScope: 'document',
     });
 
@@ -1139,25 +1342,33 @@
     register({
       id: 'v3-video-popup',
       versions: ['v3'],
-      match: (scope) => {
-        const rootSelector = [
-          '[class~="video_player_wrap"]',
-          '[class*="--video_player_wrap "]',
-          '[class$="--video_player_wrap"]',
-        ].join(',');
-        const root =
-          (scope.nodeType === Node.ELEMENT_NODE && scope.matches?.(rootSelector) && scope) ||
-          scope.querySelector?.(rootSelector);
-
-        return Boolean(
-          root?.querySelector('[data-video-player-open]') &&
-            root.querySelector('dialog[data-video-player-dialog]'),
-        );
-      },
+      match: (scope) =>
+        collectVideoPlayerRoots(scope).some((root) => {
+          const dialog = root.querySelector('dialog[data-video-player-dialog]');
+          return Boolean(
+            root.querySelector('[data-video-player-open]') &&
+              dialog?.querySelector('iframe[data-video-src]') &&
+              dialog.querySelector('[data-video-player-close]'),
+          );
+        }),
       global: 'PatternVideoPopup',
       script: {
         src: '../media/video-popup.js',
-        integrity: 'sha384-jpBKR1ReiRnP/iFNzzwjcvBsSZm0yL6lH/5Cmx8cJI6BFw+hOjk7jEUttSYLSGYr',
+        integrity: 'sha384-V4sdBPl9LCUpScdMBwHAdo/2SU0XWve1/EKhf4MmMSnUVbwDtCAiGgKcHi+1VuS0',
+      },
+    });
+
+    register({
+      id: 'v3-video-preview',
+      versions: ['v3'],
+      match: (scope) =>
+        collectVideoPlayerRoots(scope).some((root) =>
+          root.querySelector('video[data-src]'),
+        ),
+      global: 'PatternVideoPreview',
+      script: {
+        src: '../media/video-preview.js',
+        integrity: 'sha384-chLfIt1Cm0PzKy6+62JMrZXl+UUFPV8YY5HkqEsGDWI2unAuosUbx7uP+SktbCwR',
       },
     });
   }

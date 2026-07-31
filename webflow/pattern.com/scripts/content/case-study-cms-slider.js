@@ -5,6 +5,8 @@
   const ITEM_SELECTOR = ".w-dyn-item";
   const COMPONENT_SELECTOR = '[class*="case-study_slider_wrap"]';
   const STYLE_ID = "pattern-case-study-slider-styles";
+  const DEFERRED_ROOT_MARGIN = "1200px 0px";
+  const LEGACY_VERSIONS = new Set(["v1", "v2", "v2l"]);
 
   const SELECTORS = {
     visual: '[class*="case-study_slider_visual"]',
@@ -26,6 +28,7 @@
   const state = window.PatternCaseStudyCMS = window.PatternCaseStudyCMS || {};
   if (!(state.instances instanceof WeakMap)) state.instances = new WeakMap();
   if (!(state.initialized instanceof WeakSet)) state.initialized = new WeakSet();
+  if (!(state.deferred instanceof WeakMap)) state.deferred = new WeakMap();
 
   function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;
@@ -49,6 +52,7 @@
         overflow: hidden;
       }
 
+      [data-case-study-slider-deferred] [class*="case-study_slider_controls"],
       [data-case-study-slider-ready] [class*="case-study_slider_controls"][hidden],
       [data-case-study-slider-static] [class*="case-study_slider_controls"] {
         display: none !important;
@@ -481,13 +485,115 @@
     state.initialized.add(root);
   }
 
-  function init(root) {
+  function cancelDeferredInitialization(root) {
+    const deferred = state.deferred.get(root);
+    if (!deferred) return;
+
+    deferred.active = false;
+    deferred.observer?.disconnect();
+    root.removeEventListener("pointerenter", deferred.start);
+    root.removeEventListener("focusin", deferred.start);
+    root.removeAttribute("data-case-study-slider-deferred");
+    root.removeAttribute("data-case-study-slider-loading");
+    state.deferred.delete(root);
+  }
+
+  function deferSlider(root, runtime) {
+    if (state.initialized.has(root) || state.deferred.has(root)) return;
+
+    const items = getItems(root);
+    if (!items.length) return;
+
+    const component = items[0].querySelector(COMPONENT_SELECTOR);
+    if (!component) return;
+
+    const records = collectRecords(root);
+    if (records.length < 2) {
+      initializeStatic(root, component);
+      state.initialized.add(root);
+      return;
+    }
+
+    const deferred = {
+      active: true,
+      started: false,
+      observer: null,
+      start: null
+    };
+
+    const start = async () => {
+      if (!deferred.active || deferred.started || state.initialized.has(root)) return;
+      deferred.started = true;
+
+      deferred.observer?.disconnect();
+      root.removeEventListener("pointerenter", start);
+      root.removeEventListener("focusin", start);
+      root.setAttribute("data-case-study-slider-loading", "");
+
+      try {
+        await Promise.all([
+          runtime.loadDependency("gsap"),
+          runtime.loadDependency("swiper")
+        ]);
+
+        if (!deferred.active) return;
+        initializeSlider(root);
+
+        if (!state.initialized.has(root)) {
+          console.warn(
+            "[Case Study CMS] Dependencies loaded, but the slider markup could not be initialized."
+          );
+        }
+      } catch (error) {
+        console.warn(
+          "[Case Study CMS] Deferred dependencies could not load; the static CMS fallback remains visible.",
+          error
+        );
+      } finally {
+        if (deferred.active) {
+          root.removeAttribute("data-case-study-slider-deferred");
+          root.removeAttribute("data-case-study-slider-loading");
+        }
+        if (state.deferred.get(root) === deferred) state.deferred.delete(root);
+      }
+    };
+
+    deferred.start = start;
+    state.deferred.set(root, deferred);
+    root.setAttribute("data-case-study-slider-deferred", "");
+    root.addEventListener("pointerenter", start, { once: true });
+    root.addEventListener("focusin", start, { once: true });
+
+    if ("IntersectionObserver" in window) {
+      deferred.observer = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((entry) => entry.isIntersecting)) void start();
+        },
+        { rootMargin: DEFERRED_ROOT_MARGIN }
+      );
+      deferred.observer.observe(root);
+    } else {
+      void start();
+    }
+  }
+
+  function init(root, runtime) {
+    const detectedVersion = runtime?.detectVersion?.(document)?.version;
+    if (LEGACY_VERSIONS.has(detectedVersion)) return;
+
     injectStyles();
-    findSliderRoots(root).forEach(initializeSlider);
+    findSliderRoots(root).forEach((sliderRoot) => {
+      if (runtime?.managed && typeof runtime.loadDependency === "function") {
+        deferSlider(sliderRoot, runtime);
+      } else {
+        initializeSlider(sliderRoot);
+      }
+    });
   }
 
   function destroy(root) {
     findSliderRoots(root).forEach((sliderRoot) => {
+      cancelDeferredInitialization(sliderRoot);
       const instance = state.instances.get(sliderRoot);
 
       if (instance) {
@@ -514,6 +620,8 @@
 
       sliderRoot.removeAttribute("data-case-study-slider-ready");
       sliderRoot.removeAttribute("data-case-study-slider-static");
+      sliderRoot.removeAttribute("data-case-study-slider-deferred");
+      sliderRoot.removeAttribute("data-case-study-slider-loading");
       sliderRoot.removeAttribute("role");
       sliderRoot.removeAttribute("aria-roledescription");
       sliderRoot.removeAttribute("aria-busy");
@@ -522,6 +630,8 @@
   }
 
   function boot() {
+    if (window.PatternRuntime?.managed) return;
+
     let attempts = 0;
     const waitForSwiper = () => {
       const roots = findSliderRoots(document);

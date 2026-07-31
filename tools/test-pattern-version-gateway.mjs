@@ -11,6 +11,10 @@ const videoPopupSource = await fs.readFile(
   new URL('../webflow/pattern.com/scripts/media/video-popup.js', import.meta.url),
   'utf8',
 );
+const videoPreviewSource = await fs.readFile(
+  new URL('../webflow/pattern.com/scripts/media/video-preview.js', import.meta.url),
+  'utf8',
+);
 const headingRevealSource = await fs.readFile(
   new URL(
     '../webflow/pattern.com/scripts/interaction/v3-heading-text-reveal.js',
@@ -32,6 +36,7 @@ const gatewayLocalAssetSources = await Promise.all(
     '../webflow/pattern.com/scripts/content/case-study-cms-slider.js',
     '../webflow/pattern.com/scripts/interaction/accordion.js',
     '../webflow/pattern.com/scripts/media/video-popup.js',
+    '../webflow/pattern.com/scripts/media/video-preview.js',
   ].map((path) => fs.readFile(new URL(path, import.meta.url), 'utf8')),
 );
 const gatewayEmbed = await fs.readFile(
@@ -396,7 +401,10 @@ try {
       `
         <div class="pattern-library-v3--video_player_wrap">
           <button data-video-player-open>Play</button>
-          <dialog data-video-player-dialog></dialog>
+          <dialog data-video-player-dialog>
+            <iframe data-video-src="https://vimeo.com/1146670446"></iframe>
+            <button data-video-player-close>Close</button>
+          </dialog>
         </div>
       `,
     );
@@ -445,6 +453,7 @@ try {
           <button data-video-player-open>Play</button>
           <dialog data-video-player-dialog>
             <iframe data-video-src="https://vimeo.com/1146670446"></iframe>
+            <button data-video-player-close>Close</button>
           </dialog>
         </div>
       </main>
@@ -938,6 +947,7 @@ try {
           <button data-video-player-open>Play</button>
           <dialog data-video-player-dialog>
             <iframe data-video-src="https://vimeo.com/1146670446"></iframe>
+            <button data-video-player-close>Close</button>
           </dialog>
         </div>
       </main>
@@ -976,13 +986,62 @@ try {
   );
   await activeV3Page.close();
 
+  const activeV3PreviewPage = await createScenario({
+    html: `
+      <main class="page_main_v3">
+        <div class="video_player_wrap">
+          <video
+            data-src="https://pvg.test/video-preview.mp4"
+            preload="none"
+            muted
+            playsinline
+          ></video>
+        </div>
+      </main>
+    `,
+    config: { mode: 'active' },
+    routes: [
+      {
+        url: '**/scripts/media/video-preview.js',
+        body: videoPreviewSource,
+      },
+      {
+        url: 'https://pvg.test/video-preview.mp4',
+        contentType: 'video/mp4',
+        body: '',
+      },
+    ],
+  });
+  await activeV3PreviewPage.waitForFunction(
+    () =>
+      window.PatternVersionGateway
+        .inspect()
+        .modules.find((module) => module.id === 'v3-video-preview')?.status === 'ready',
+  );
+  await activeV3PreviewPage.waitForFunction(() =>
+    document.querySelector('video')?.hasAttribute('data-video-preview-hydrated'),
+  );
+  const activeV3Preview = await activeV3PreviewPage.evaluate(() => ({
+    version: window.PatternVideoPreview.version,
+    src: document.querySelector('video').getAttribute('src'),
+    autoplay: document.querySelector('video').hasAttribute('autoplay'),
+    popupModule: window.PatternVersionGateway
+      .inspect()
+      .modules.find((module) => module.id === 'v3-video-popup'),
+  }));
+  assert.equal(activeV3Preview.version, '1.0.0');
+  assert.equal(activeV3Preview.src, 'https://pvg.test/video-preview.mp4');
+  assert.equal(activeV3Preview.autoplay, false);
+  assert.equal(activeV3Preview.popupModule.status, 'idle');
+  await activeV3PreviewPage.close();
+
   const existingRuntimePage = await createScenario({
     html: `
       <script>
         window.__pvgExistingRuntimeInitCalls = 0;
         window.PatternRuntime = { version: '0.3.0' };
         window.PatternVideoPopup = {
-          version: '1.1.2',
+          version: '1.1.3',
           init() {
             window.__pvgExistingRuntimeInitCalls += 1;
           },
@@ -991,7 +1050,10 @@ try {
       <main class="page_main_v3">
         <div class="pattern-library-v3--video_player_wrap">
           <button data-video-player-open>Play</button>
-          <dialog data-video-player-dialog></dialog>
+          <dialog data-video-player-dialog>
+            <iframe data-video-src="https://vimeo.com/1146670446"></iframe>
+            <button data-video-player-close>Close</button>
+          </dialog>
         </div>
       </main>
     `,
@@ -1022,6 +1084,7 @@ try {
           <button data-video-player-open>Play</button>
           <dialog data-video-player-dialog data-consent-category="personalization">
             <iframe data-video-src="https://vimeo.com/1146670446"></iframe>
+            <button data-video-player-close>Close</button>
           </dialog>
         </div>
       </main>
@@ -1069,7 +1132,7 @@ try {
   await consentGatedPage.waitForFunction(
     () => document.querySelector('dialog[data-video-player-dialog]')?.open === true,
   );
-  assert.equal(await consentGatedPage.evaluate(() => window.PatternVideoPopup.version), '1.1.2');
+  assert.equal(await consentGatedPage.evaluate(() => window.PatternVideoPopup.version), '1.1.3');
   await consentGatedPage.close();
 
   const failedModulePage = await createScenario({
@@ -1078,7 +1141,10 @@ try {
         <p id="authored-content">Authored content remains readable.</p>
         <div class="pattern-library-v3--video_player_wrap">
           <button data-video-player-open>Play</button>
-          <dialog data-video-player-dialog></dialog>
+          <dialog data-video-player-dialog>
+            <iframe data-video-src="https://vimeo.com/1146670446"></iframe>
+            <button data-video-player-close>Close</button>
+          </dialog>
         </div>
       </main>
     `,

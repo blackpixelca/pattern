@@ -12,8 +12,12 @@
   'use strict';
 
   var GLOBAL_NAME = 'PatternVideoPopup';
-  var VERSION = '1.1.2';
-  var ROOT_SELECTOR = '[class*="video_player_wrap"]';
+  var VERSION = '1.1.3';
+  var ROOT_SELECTOR = [
+    '[class~="video_player_wrap"]',
+    '[class*="--video_player_wrap "]',
+    '[class$="--video_player_wrap"]'
+  ].join(',');
   var OPEN_SELECTOR = '[data-video-player-open]';
   var DIALOG_SELECTOR = 'dialog[data-video-player-dialog]';
   var CLOSE_SELECTOR = '[data-video-player-close]';

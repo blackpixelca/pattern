@@ -17,6 +17,11 @@
   const EVENT_PREFIX = 'pattern:pvg';
   const ALL_VERSIONS = ['v1', 'v2', 'v2l', 'v3'];
   const LEGACY_VERSIONS = ['v1', 'v2', 'v2l'];
+  const V3_VIDEO_PLAYER_ROOT_SELECTOR = [
+    '[class~="video_player_wrap"]',
+    '[class*="--video_player_wrap "]',
+    '[class$="--video_player_wrap"]',
+  ].join(',');
   const currentScript = document.currentScript;
   const existingGateway = window[GLOBAL_NAME];
 
@@ -691,7 +696,7 @@
       global: 'PatternCaseStudyCMS',
       script: {
         src: '../content/case-study-cms-slider.js',
-        integrity: 'sha384-xSQ424AnGtJyUNsiYYwMcewaeftzbWWyOJfD+kHvpRdzkNz0mHSdXsNjdGzYwl/b',
+        integrity: 'sha384-5+IGR8N62Hohu6K23CDo9/OWbL6m5Pxv1mPVVFQwd+B+u1yOC1x+94XM0esaP13d',
       },
       dependencies: ['swiper', 'gsap'],
       initScope: 'document',
@@ -711,21 +716,64 @@
       id: 'v3-video-popup',
       versions: ['v3'],
       match: (scope) => {
-        const root =
-          (scope.nodeType === Node.ELEMENT_NODE &&
-            scope.matches?.('[class*="video_player_wrap"]') &&
-            scope) ||
-          scope.querySelector?.('[class*="video_player_wrap"]');
+        const roots = [];
+        const closest =
+          scope.nodeType === Node.ELEMENT_NODE
+            ? scope.closest?.(V3_VIDEO_PLAYER_ROOT_SELECTOR)
+            : null;
+        if (closest) roots.push(closest);
+        if (
+          scope.nodeType === Node.ELEMENT_NODE &&
+          scope.matches?.(V3_VIDEO_PLAYER_ROOT_SELECTOR) &&
+          !roots.includes(scope)
+        ) {
+          roots.push(scope);
+        }
+        scope.querySelectorAll?.(V3_VIDEO_PLAYER_ROOT_SELECTOR).forEach((root) => {
+          roots.push(root);
+        });
 
-        return Boolean(
-          root?.querySelector('[data-video-player-open]') &&
-            root.querySelector('dialog[data-video-player-dialog]'),
-        );
+        return roots.some((root) => {
+          const dialog = root.querySelector('dialog[data-video-player-dialog]');
+          return Boolean(
+            root.querySelector('[data-video-player-open]') &&
+              dialog?.querySelector('iframe[data-video-src]') &&
+              dialog.querySelector('[data-video-player-close]'),
+          );
+        });
       },
       global: 'PatternVideoPopup',
       script: {
         src: '../media/video-popup.js',
-        integrity: 'sha384-jpBKR1ReiRnP/iFNzzwjcvBsSZm0yL6lH/5Cmx8cJI6BFw+hOjk7jEUttSYLSGYr',
+        integrity: 'sha384-V4sdBPl9LCUpScdMBwHAdo/2SU0XWve1/EKhf4MmMSnUVbwDtCAiGgKcHi+1VuS0',
+      },
+    },
+    {
+      id: 'v3-video-preview',
+      versions: ['v3'],
+      match: (scope) => {
+        const roots = [];
+        const closest =
+          scope.nodeType === Node.ELEMENT_NODE
+            ? scope.closest?.(V3_VIDEO_PLAYER_ROOT_SELECTOR)
+            : null;
+        if (closest) roots.push(closest);
+        if (
+          scope.nodeType === Node.ELEMENT_NODE &&
+          scope.matches?.(V3_VIDEO_PLAYER_ROOT_SELECTOR) &&
+          !roots.includes(scope)
+        ) {
+          roots.push(scope);
+        }
+        scope.querySelectorAll?.(V3_VIDEO_PLAYER_ROOT_SELECTOR).forEach((root) => {
+          roots.push(root);
+        });
+        return roots.some((root) => root.querySelector('video[data-src]'));
+      },
+      global: 'PatternVideoPreview',
+      script: {
+        src: '../media/video-preview.js',
+        integrity: 'sha384-chLfIt1Cm0PzKy6+62JMrZXl+UUFPV8YY5HkqEsGDWI2unAuosUbx7uP+SktbCwR',
       },
     },
   ];

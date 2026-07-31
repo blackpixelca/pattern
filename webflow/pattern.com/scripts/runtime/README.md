@@ -31,14 +31,32 @@ rollback references. They are not installed beside Pattern Runtime 1.0.
 | Module group | Page versions |
 | --- | --- | --- |
 | Shared utilities | V1, V2, V2L, V3 |
+| Finsweet List, Scroll Disable, Social Share | Matching attribute only; V1, V2, V2L, V3 |
 | Legacy navigation, FAQ, lazy load, Splide | V1, V2, V2L |
 | Legacy video markup compatibility | V1, V2, V2L, V3 |
-| Marquee, Home anchor nav, H1 reveal, case study, V3 video | V3 |
+| Marquee, Home anchor nav, H1 reveal, case study, V3 popup and preview video | V3 |
 | Accordion | V1, V2, V2L, V3 |
 
 The `library-v3` profile treats the entire Pattern Library as V3 without
 requiring page markers. The `consumer` profile detects explicit page-root
 versions and fails closed when the version is unknown or conflicting.
+
+## Conditional Finsweet modules
+
+Runtime loads Finsweet only when the matching authored attribute exists:
+
+| Runtime module | Selector | Pinned entry script |
+| --- | --- | --- |
+| `finsweet-list` | `[fs-list-element]` | `@finsweet/attributes@2.7.1/attributes.js` |
+| `finsweet-scroll-disable` | `[fs-scrolldisable-element]` | `@finsweet/attributes@2.7.1/attributes.js` |
+| `finsweet-social-share` | `[fs-socialshare-element]` | `@finsweet/attributes-socialshare@1.3.2/socialshare.js` |
+
+List and Scroll Disable share one deduplicated Finsweet Attributes entry
+script. Mutation rescans call the feature module's restart lifecycle only when
+new matching roots appear. Social Share keeps its compatible v1 markup contract
+and reinitializes only after a new Social Share root is added.
+
+Consent Pro and every `[fs-consent-*]` attribute remain outside these modules.
 
 ## Runtime contract
 
