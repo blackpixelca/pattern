@@ -1,26 +1,44 @@
 # Pattern Runtime
 
-`pattern-runtime.js` is the shared delivery layer for Pattern-owned Webflow
-behaviors. It detects supported component selectors, loads only their required
-styles/scripts and third-party dependencies, and calls each module's idempotent
-`init(scope)` API.
+Pattern Runtime 1.0 is the single delivery layer for Pattern-owned Webflow
+behaviors across the all-V3 Library and mixed V1/V2/V2L/V3 production sites.
+It combines the former component Runtime and Pattern Version Gateway.
 
-## Component embed
+See [`docs/PATTERN-RUNTIME-1.0-PLAN.md`](../../../../docs/PATTERN-RUNTIME-1.0-PLAN.md)
+for the operating contract, limits, release gates, and rollback plan.
 
-The Webflow `• Global / Runtime` component contains only a small bootloader that
-injects the commit-pinned Runtime asset once per page. The Runtime and component
-modules remain hosted in this repository and are delivered through jsDelivr.
+## Permanent bootstrap
+
+Webflow sites install `pattern-runtime-loader.js` once. The loader reads the
+central `stable` or `canary` manifest, then loads one immutable Runtime payload
+with SRI.
+
+Routine Runtime releases update the central manifest. They do not require a
+new Webflow footer edit.
+
+Footer templates:
+
+- `pattern-runtime-library-footer.template.html`
+- `pattern-runtime-consumer-footer.template.html`
+
+Manifest templates are under `manifests/`.
+
+The old `pattern-version-gateway.js` and its embeds remain temporarily as
+rollback references. They are not installed beside Pattern Runtime 1.0.
 
 ## Default modules
 
-| Module | Detection selector | Dependencies |
+| Module group | Page versions |
 | --- | --- | --- |
-| Dynamic Year | `[data-dynamic-year]` | None |
-| Marquee | `[data-marquee]` | Marquee CSS |
-| Home Anchor Nav | `[data-home-anchor-nav]`, portable `home_anchor_nav` class | Anchor CSS |
-| Case Study | `[data-case-study-slider], .case-study_slider_wrap` | Swiper 8, GSAP 3 |
-| Accordion | `[data-accordion], [class*="accordion_wrap"]` | GSAP 3 |
-| Video Popup | `.video_player_wrap` | None |
+| Shared utilities | V1, V2, V2L, V3 |
+| Legacy navigation, FAQ, lazy load, Splide | V1, V2, V2L |
+| Legacy video markup compatibility | V1, V2, V2L, V3 |
+| Marquee, Home anchor nav, H1 reveal, case study, V3 video | V3 |
+| Accordion | V1, V2, V2L, V3 |
+
+The `library-v3` profile treats the entire Pattern Library as V3 without
+requiring page markers. The `consumer` profile detects explicit page-root
+versions and fails closed when the version is unknown or conflicting.
 
 ## Runtime contract
 
@@ -66,7 +84,38 @@ window.PatternRuntime.inspect();
 ```
 
 The Runtime also emits `pattern:runtime:*` document events for readiness,
-module loading, errors, and completed scans.
+loader state, module loading, errors, and completed scans.
+
+## Release packaging
+
+After committing a candidate:
+
+```bash
+node tools/build-pattern-runtime-release.mjs \
+  --commit=HEAD \
+  --channel=canary
+```
+
+The release output contains:
+
+- the central manifest candidate;
+- the immutable loader and Runtime URLs and SRI values;
+- Library and consumer footer snippets;
+- byte counts and SHA-256 checksums.
+
+`pattern-runtime-loader.lock.json` pins the one permanent bootstrap commit.
+Release packaging reads that lock, so future Runtime releases keep producing
+the same loader URL and SRI instead of asking installed sites to update.
+
+Promote the exact tested Runtime URL and integrity value from canary to stable.
+Do not rebuild between testing and promotion.
+
+## Rollback
+
+Normal rollback changes the central stable manifest to the last verified
+Runtime. An emergency manifest can set `enabled` to `false`, which loads no
+Runtime and leaves authored Webflow content available. Restoring the backed-up
+site footer is reserved for a bootstrap failure.
 
 ## Content contract
 
