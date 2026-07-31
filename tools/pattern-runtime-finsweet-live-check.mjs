@@ -6,8 +6,11 @@ import { chromium } from 'playwright';
 // in browser memory and replaced with the local Runtime candidate. No Webflow
 // API, Designer, or publishing operation is used.
 const RUNTIME_PATH =
+  process.env.PATTERN_RUNTIME_PATH ||
   '/Users/kenneth/_Projects/pattern/webflow/pattern.com/scripts/runtime/pattern-runtime.js';
+const EXPECTED_VERSION = process.env.PATTERN_RUNTIME_VERSION || '1.0.0';
 const OUTPUT =
+  process.env.PATTERN_RUNTIME_OUTPUT ||
   '/Users/kenneth/_Projects/pattern/audits/pattern-runtime/2026-07-31-finsweet-live-injection.json';
 const BASE_URL =
   'https://runtime.test/webflow/pattern.com/scripts/runtime/';
@@ -163,9 +166,11 @@ for (const check of checks) {
     waitUntil: 'domcontentloaded',
     timeout: 60_000,
   });
-  await page.waitForFunction(() => window.PatternRuntime?.version === '1.0.0', null, {
-    timeout: 15_000,
-  });
+  await page.waitForFunction(
+    (version) => window.PatternRuntime?.version === version,
+    EXPECTED_VERSION,
+    { timeout: 15_000 },
+  );
 
   for (const moduleId of check.expectedModules) {
     try {
@@ -243,7 +248,7 @@ for (const check of checks) {
     .map((module) => module.id);
   const failures = [];
   if (response?.status() !== 200) failures.push(`HTTP ${response?.status() || 0}`);
-  if (state.activation?.reason !== 'active') {
+  if (state.activation && state.activation.reason !== 'active') {
     failures.push(`Runtime activation is ${state.activation?.reason || 'missing'}`);
   }
   for (const moduleId of check.expectedModules) {

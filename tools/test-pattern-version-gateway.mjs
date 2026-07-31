@@ -100,7 +100,7 @@ async function createScenario({ html, config = {}, routes = [] }) {
     ...config,
   });
   await page.addScriptTag({ content: gatewaySource });
-  await page.waitForFunction(() => window.PatternVersionGateway?.version === '0.2.4');
+  await page.waitForFunction(() => window.PatternVersionGateway?.version === '0.2.5');
   await page.waitForTimeout(25);
 
   return page;
@@ -110,6 +110,8 @@ async function inspectScenario(options) {
   const page = await createScenario(options);
   const result = await page.evaluate(() => ({
     ...window.PatternVersionGateway.inspect(),
+    loadDependencyExposed:
+      typeof window.PatternVersionGateway.loadDependency === 'function',
     managedAssets: document.querySelectorAll('[data-pattern-pvg-asset]').length,
   }));
   await page.close();
@@ -146,7 +148,7 @@ async function inspectEmbedScenario({ html, embed, routes = [] }) {
 
   await page.setContent(html, { waitUntil: 'domcontentloaded' });
   await page.addScriptTag({ content: getInlineScript(embed) });
-  await page.waitForFunction(() => window.PatternVersionGateway?.version === '0.2.4');
+  await page.waitForFunction(() => window.PatternVersionGateway?.version === '0.2.5');
   await page.waitForTimeout(25);
 
   const result = await page.evaluate(() => ({
@@ -223,6 +225,20 @@ try {
   });
   assert.equal(v2l.detection.version, 'v2l');
   assert.equal(v2l.detection.family, 'v2');
+
+  const deferredCaseStudy = await inspectScenario({
+    html: `
+      <main class="page_main_v3">
+        <div data-case-study-slider></div>
+      </main>
+    `,
+  });
+  const caseStudyPlan = deferredCaseStudy.plan.find(
+    (module) => module.id === 'case-study',
+  );
+  assert.ok(caseStudyPlan);
+  assert.deepEqual(caseStudyPlan.dependencies, []);
+  assert.equal(deferredCaseStudy.loadDependencyExposed, true);
 
   const componentVersionTokens = await inspectScenario({
     html: `
@@ -344,7 +360,7 @@ try {
   await legacyCutoverPage.evaluate(() => window.pageFunctions.executeFunctions());
   await legacyCutoverPage.waitForFunction(
     () =>
-      window.PatternVersionGateway?.version === '0.2.4' &&
+      window.PatternVersionGateway?.version === '0.2.5' &&
       window.pageFunctions.executed.splideSlider === true,
   );
   const legacyCutover = await legacyCutoverPage.evaluate(() => ({

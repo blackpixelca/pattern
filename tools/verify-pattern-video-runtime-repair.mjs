@@ -6,21 +6,36 @@ import { chromium } from 'playwright';
 // browser memory to mirror the saved component/prop repair, then the local
 // Runtime candidate is injected. No Webflow write or publish occurs here.
 const PROJECT_ROOT = '/Users/kenneth/_Projects/pattern';
-const RUNTIME_PATH = path.join(
+const DEFAULT_RUNTIME_PATH = path.join(
   PROJECT_ROOT,
   'webflow/pattern.com/scripts/runtime/pattern-runtime.js',
 );
-const OUTPUT_PATH = path.join(
-  PROJECT_ROOT,
-  'audits/pattern-runtime/2026-07-31-video-popup-saved-state-injection.json',
-);
+const CONSUMER_RUNTIME_PATH =
+  process.env.PATTERN_CONSUMER_RUNTIME_PATH || DEFAULT_RUNTIME_PATH;
+const LIBRARY_RUNTIME_PATH =
+  process.env.PATTERN_LIBRARY_RUNTIME_PATH || DEFAULT_RUNTIME_PATH;
+const DEFAULT_RUNTIME_VERSION = process.env.PATTERN_RUNTIME_VERSION || '1.0.0';
+const CONSUMER_RUNTIME_VERSION =
+  process.env.PATTERN_CONSUMER_RUNTIME_VERSION || DEFAULT_RUNTIME_VERSION;
+const LIBRARY_RUNTIME_VERSION =
+  process.env.PATTERN_LIBRARY_RUNTIME_VERSION || DEFAULT_RUNTIME_VERSION;
+const DIRECT_LEGACY_MODE = process.env.PATTERN_DIRECT_LEGACY_MODE === '1';
+const OUTPUT_PATH =
+  process.env.PATTERN_VIDEO_OUTPUT ||
+  path.join(
+    PROJECT_ROOT,
+    'audits/pattern-runtime/2026-07-31-video-popup-saved-state-injection.json',
+  );
 const BASE_URL = 'https://runtime.test/webflow/pattern.com/scripts/runtime/';
 const LIBRARY_URL = 'https://pattern-l3.webflow.io/cc/video';
 const HOME_URL = 'https://pattern-us.webflow.io/home-v3';
 const HOME_PREVIEW_URL = 'https://assets.pattern.com/WQ71necbZXNVhu9OrFcJN';
 const HOME_POPUP_URL = 'https://vimeo.com/1146670446';
 
-const runtimeSource = await fs.readFile(RUNTIME_PATH, 'utf8');
+const [consumerRuntimeSource, libraryRuntimeSource] = await Promise.all([
+  fs.readFile(CONSUMER_RUNTIME_PATH, 'utf8'),
+  fs.readFile(LIBRARY_RUNTIME_PATH, 'utf8'),
+]);
 const [libraryResponse, homeResponse] = await Promise.all([
   fetch(`${LIBRARY_URL}?candidate=${Date.now()}`),
   fetch(`${HOME_URL}?candidate=${Date.now()}`),
@@ -144,6 +159,11 @@ const checks = [
     url: LIBRARY_URL,
     html: libraryTransformed.html,
     profile: 'library-v3',
+    runtimeSource: libraryRuntimeSource,
+    runtimeVersion: LIBRARY_RUNTIME_VERSION,
+    videoModuleIds: DIRECT_LEGACY_MODE
+      ? ['video-popup', 'video-preview']
+      : ['v3-video-popup', 'v3-video-preview'],
     home: false,
   },
   {
@@ -151,6 +171,11 @@ const checks = [
     url: HOME_URL,
     html: homeTransformed.html,
     profile: 'consumer',
+    runtimeSource: consumerRuntimeSource,
+    runtimeVersion: CONSUMER_RUNTIME_VERSION,
+    videoModuleIds: DIRECT_LEGACY_MODE
+      ? ['video-popup', 'video-preview']
+      : ['v3-video-popup', 'v3-video-preview'],
     home: true,
   },
 ];
@@ -227,7 +252,7 @@ for (const check of checks) {
         legacyPolicy: 'gateway',
         baseUrl: ${JSON.stringify(BASE_URL)}
       };
-      ${runtimeSource}
+      ${check.runtimeSource}
     `,
   });
 
@@ -235,12 +260,16 @@ for (const check of checks) {
     waitUntil: 'domcontentloaded',
     timeout: 60_000,
   });
-  await page.waitForFunction(() => window.PatternRuntime?.version === '1.0.0');
   await page.waitForFunction(
-    () =>
+    (version) => window.PatternRuntime?.version === version,
+    check.runtimeVersion,
+  );
+  await page.waitForFunction(
+    (moduleId) =>
       window.PatternRuntime
         .inspect()
-        .modules.find((module) => module.id === 'v3-video-popup')?.status === 'ready',
+        .modules.find((module) => module.id === moduleId)?.status === 'ready',
+    check.videoModuleIds[0],
   );
 
   let preview = null;
@@ -319,18 +348,16 @@ for (const check of checks) {
     popupResults.push({ index, opened, closed });
   }
 
-  const runtime = await page.evaluate(() => {
+  const runtime = await page.evaluate((videoModuleIds) => {
     const inspection = window.PatternRuntime.inspect();
     return {
       detection: inspection.detection,
-      videoModules: inspection.modules.filter((module) =>
-        module.id.startsWith('v3-video-'),
-      ),
+      videoModules: inspection.modules.filter((module) => videoModuleIds.includes(module.id)),
       moduleScripts: [...document.querySelectorAll('script[data-pattern-runtime-asset]')]
         .filter((script) => /video-(?:popup|preview)\.js/.test(script.src))
         .map((script) => script.src),
     };
-  });
+  }, check.videoModuleIds);
 
   const failures = [];
   if (response?.status() !== 200) failures.push(`HTTP ${response?.status() || 0}`);

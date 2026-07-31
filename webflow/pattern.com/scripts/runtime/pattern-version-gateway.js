@@ -13,7 +13,7 @@
   'use strict';
 
   const GLOBAL_NAME = 'PatternVersionGateway';
-  const VERSION = '0.2.4';
+  const VERSION = '0.2.5';
   const EVENT_PREFIX = 'pattern:pvg';
   const ALL_VERSIONS = ['v1', 'v2', 'v2l', 'v3'];
   const LEGACY_VERSIONS = ['v1', 'v2', 'v2l'];
@@ -698,7 +698,6 @@
         src: '../content/case-study-cms-slider.js',
         integrity: 'sha384-5+IGR8N62Hohu6K23CDo9/OWbL6m5Pxv1mPVVFQwd+B+u1yOC1x+94XM0esaP13d',
       },
-      dependencies: ['swiper', 'gsap'],
       initScope: 'document',
     },
     {
@@ -1010,6 +1009,7 @@
     managed: true,
     config,
     detectVersion,
+    loadDependency,
     plan: getPlan,
     scan,
     inspect,
