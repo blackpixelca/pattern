@@ -1,11 +1,5 @@
 {
   "schemaVersion": 1,
   "channel": "canary",
-  "enabled": true,
-  "releasedAt": "2026-07-31T15:45:00.000Z",
-  "runtime": {
-    "version": "1.0.0",
-    "src": "https://cdn.jsdelivr.net/gh/specterstudio/pattern@82298e00ac7445159498ab287bc06227e7712049/webflow/pattern.com/scripts/runtime/pattern-runtime.js",
-    "integrity": "sha384-RT5TpBX+gupOfjAudkmO9d/C9C9Y/H2eSX8PrvTilnPJzBRkRMJKiR+awS1WG/39"
-  }
+  "enabled": false
 }
