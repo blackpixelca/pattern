@@ -12,7 +12,7 @@
     '[data-heading-reveal="true"][data-wf--typography-heading--font-style="h1"]',
     '[data-heading-reveal="true"][data-wf--pattern-library-v3--typography-heading--font-style="h1"]',
   ].join(',');
-  const FINSWEET_LIST_SELECTOR = '[fs-list-element]';
+  const FINSWEET_LIST_SELECTOR = '[fs-list-element="list"]';
   const FINSWEET_SCROLL_DISABLE_SELECTOR = '[fs-scrolldisable-element]';
   const FINSWEET_SOCIAL_SHARE_SELECTOR = '[fs-socialshare-element]';
   const V3_VIDEO_PLAYER_ROOT_SELECTOR = [

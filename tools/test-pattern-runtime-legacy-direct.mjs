@@ -210,6 +210,19 @@ await run('Finsweet features load once and restart after Runtime rescans', async
   assert.equal(state.consent, 'personalization');
   assert.equal(requests.filter((url) => url === FINSWEET_ATTRIBUTES_URL).length, 1);
   assert.equal(requests.filter((url) => url === FINSWEET_SOCIAL_URL).length, 1);
+
+  await page.evaluate(() => {
+    const generatedPageButton = document.createElement('a');
+    generatedPageButton.setAttribute('fs-list-element', 'page-button');
+    document.body.appendChild(generatedPageButton);
+  });
+  await page.waitForTimeout(100);
+  assert.equal(
+    await page.evaluate(
+      () => window.__finsweetRestarts.filter((feature) => feature === 'list').length,
+    ),
+    1,
+  );
   await page.close();
 });
 

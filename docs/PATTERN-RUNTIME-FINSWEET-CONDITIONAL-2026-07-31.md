@@ -7,7 +7,7 @@ Nothing was published and the current Webflow global tags were not removed.
 
 | Runtime module | Exact selector | Exact pinned entry script |
 | --- | --- | --- |
-| `finsweet-list` | `[fs-list-element]` | `https://cdn.jsdelivr.net/npm/@finsweet/attributes@2.7.1/attributes.js` |
+| `finsweet-list` | `[fs-list-element="list"]` | `https://cdn.jsdelivr.net/npm/@finsweet/attributes@2.7.1/attributes.js` |
 | `finsweet-scroll-disable` | `[fs-scrolldisable-element]` | `https://cdn.jsdelivr.net/npm/@finsweet/attributes@2.7.1/attributes.js` |
 | `finsweet-social-share` | `[fs-socialshare-element]` | `https://cdn.jsdelivr.net/npm/@finsweet/attributes-socialshare@1.3.2/socialshare.js` |
 

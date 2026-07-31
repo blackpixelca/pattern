@@ -5,7 +5,7 @@
   const VERSION = '0.2.1';
   const EVENT_PREFIX = 'pattern:runtime';
   const DYNAMIC_YEAR_SELECTOR = '[data-dynamic-year]';
-  const FINSWEET_LIST_SELECTOR = '[fs-list-element]';
+  const FINSWEET_LIST_SELECTOR = '[fs-list-element="list"]';
   const FINSWEET_SCROLL_DISABLE_SELECTOR = '[fs-scrolldisable-element]';
   const FINSWEET_SOCIAL_SHARE_SELECTOR = '[fs-socialshare-element]';
   const VIDEO_PLAYER_ROOT_SELECTOR = [

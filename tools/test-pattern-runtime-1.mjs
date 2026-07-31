@@ -769,6 +769,14 @@ await run('Conditional Finsweet modules deduplicate scripts and restart for resc
   assert.equal(state.socialPreventLoad, true);
 
   await page.evaluate(() => {
+    const generatedPageButton = document.createElement('a');
+    generatedPageButton.setAttribute('fs-list-element', 'page-button');
+    document.querySelector('main').appendChild(generatedPageButton);
+  });
+  await page.waitForTimeout(100);
+  assert.deepEqual(await page.evaluate(() => window.__finsweetRestarts), []);
+
+  await page.evaluate(() => {
     const nextList = document.createElement('div');
     nextList.setAttribute('fs-list-element', 'list');
     const nextSocialShare = document.createElement('button');
@@ -1032,7 +1040,7 @@ await run('Unified Runtime preserves the PVG module plan for consumer fixtures',
       };
     });
     await oldPage.addScriptTag({ content: gatewaySource });
-    await oldPage.waitForFunction(() => window.PatternVersionGateway?.version === '0.2.4');
+    await oldPage.waitForFunction(() => window.PatternVersionGateway?.version === '0.2.5');
     const oldPlan = await oldPage.evaluate(() =>
       window.PatternVersionGateway.plan().map((item) => item.id).sort(),
     );

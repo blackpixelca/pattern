@@ -47,7 +47,7 @@ Runtime loads Finsweet only when the matching authored attribute exists:
 
 | Runtime module | Selector | Pinned entry script |
 | --- | --- | --- |
-| `finsweet-list` | `[fs-list-element]` | `@finsweet/attributes@2.7.1/attributes.js` |
+| `finsweet-list` | `[fs-list-element="list"]` | `@finsweet/attributes@2.7.1/attributes.js` |
 | `finsweet-scroll-disable` | `[fs-scrolldisable-element]` | `@finsweet/attributes@2.7.1/attributes.js` |
 | `finsweet-social-share` | `[fs-socialshare-element]` | `@finsweet/attributes-socialshare@1.3.2/socialshare.js` |
 
