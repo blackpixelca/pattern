@@ -113,7 +113,7 @@ const renderFooter = (template) =>
     .replaceAll('__LOADER_SRI__', loaderSRI)
     .replaceAll('__CHANNEL__', channel);
 
-const outputDir = path.join(outputRoot, commit);
+const outputDir = path.join(outputRoot, commit, channel);
 await fs.mkdir(outputDir, { recursive: true });
 await Promise.all([
   fs.writeFile(
