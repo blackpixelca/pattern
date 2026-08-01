@@ -39,10 +39,7 @@ rollback references. They are not installed beside Pattern Runtime 1.0.
 
 The `library-v3` profile treats the entire Pattern Library as V3 without
 requiring page markers. The `consumer` profile detects explicit page-root
-versions and fails closed when the version is unknown or conflicting. The
-standalone `/catalog-offer` and `/resources/prep-calculator` tools are
-explicitly classified as `standalone`; Runtime records that classification but
-does not load component modules there.
+versions and fails closed when the version is unknown or conflicting.
 
 ## Conditional Finsweet modules
 

@@ -17,11 +17,6 @@
   const EVENT_PREFIX = 'pattern:pvg';
   const ALL_VERSIONS = ['v1', 'v2', 'v2l', 'v3'];
   const LEGACY_VERSIONS = ['v1', 'v2', 'v2l'];
-  const STANDALONE_VERSION = 'standalone';
-  const SITE_ROUTE_VERSIONS = [
-    { match: '/catalog-offer', version: STANDALONE_VERSION },
-    { match: '/resources/prep-calculator', version: STANDALONE_VERSION },
-  ];
   const V3_VIDEO_PLAYER_ROOT_SELECTOR = [
     '[class~="video_player_wrap"]',
     '[class*="--video_player_wrap "]',
@@ -47,7 +42,7 @@
     legacyPolicy: 'preserve',
     observeMutations: true,
     version: '',
-    routes: SITE_ROUTE_VERSIONS,
+    routes: [],
     baseUrl: currentScript?.src ? new URL('.', currentScript.src).href : '',
     debug: new URLSearchParams(window.location.search).has('pattern-pvg-debug'),
     ...window.PatternVersionGatewayConfig,
@@ -101,7 +96,6 @@
     if (normalized === '2') return 'v2';
     if (normalized === '2l') return 'v2l';
     if (normalized === '3') return 'v3';
-    if (normalized === STANDALONE_VERSION) return STANDALONE_VERSION;
     return ALL_VERSIONS.includes(normalized) ? normalized : '';
   };
 
@@ -285,7 +279,6 @@
   };
 
   const appliesToVersion = (definition, version) => {
-    if (version === STANDALONE_VERSION) return false;
     const versions = definition.versions || ALL_VERSIONS;
     return versions === '*' || versions.includes(version);
   };
@@ -838,13 +831,6 @@
       return {
         allowed: false,
         reason: detection.conflicts.length ? 'conflicting-version-markers' : 'unresolved-version',
-      };
-    }
-
-    if (detection.version === STANDALONE_VERSION) {
-      return {
-        allowed: false,
-        reason: 'standalone-page',
       };
     }
 
