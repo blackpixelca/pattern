@@ -163,16 +163,21 @@
 
     const promise = new Promise((resolve, reject) => {
       const existing = [...document.querySelectorAll('link[rel="stylesheet"]')].find(
-        (link) => link.href === url,
+        (link) =>
+          link.href === url ||
+          (options.integrity && link.integrity === options.integrity),
       );
 
       if (existing?.dataset.patternRuntimeLoaded === 'true' || existing?.sheet) {
+        existing.dataset.patternAssetLoaded = 'true';
+        existing.dataset.patternRuntimeLoaded = 'true';
         resolve(existing);
         return;
       }
 
       const link = existing || document.createElement('link');
       const finish = () => {
+        link.dataset.patternAssetLoaded = 'true';
         link.dataset.patternRuntimeLoaded = 'true';
         resolve(link);
       };

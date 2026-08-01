@@ -39,7 +39,10 @@ rollback references. They are not installed beside Pattern Runtime 1.0.
 
 The `library-v3` profile treats the entire Pattern Library as V3 without
 requiring page markers. The `consumer` profile detects explicit page-root
-versions and fails closed when the version is unknown or conflicting.
+versions and fails closed when the version is unknown or conflicting. The
+standalone `/catalog-offer` and `/resources/prep-calculator` tools are
+explicitly classified as `standalone`; Runtime records that classification but
+does not load component modules there.
 
 ## Conditional Finsweet modules
 
@@ -89,8 +92,10 @@ window.PatternRuntime.register({
 });
 ```
 
-Runtime deduplicates scripts, styles, and dependencies by resolved URL. A single
-MutationObserver batches added nodes and rescans only the added scopes.
+Runtime deduplicates scripts and styles by resolved URL. Styles with an SRI hash
+are also deduplicated by integrity, preventing the same verified stylesheet from
+loading twice when transitional loaders use different immutable commit URLs. A
+single MutationObserver batches added nodes and rescans only the added scopes.
 
 ## Diagnostics
 

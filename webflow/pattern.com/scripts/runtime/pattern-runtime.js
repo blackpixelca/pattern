@@ -6,6 +6,11 @@
   const EVENT_PREFIX = 'pattern:runtime';
   const ALL_VERSIONS = ['v1', 'v2', 'v2l', 'v3'];
   const LEGACY_VERSIONS = ['v1', 'v2', 'v2l'];
+  const STANDALONE_VERSION = 'standalone';
+  const SITE_ROUTE_VERSIONS = [
+    { match: '/catalog-offer', version: STANDALONE_VERSION },
+    { match: '/resources/prep-calculator', version: STANDALONE_VERSION },
+  ];
   const PROFILES = ['library-v3', 'consumer'];
   const DYNAMIC_YEAR_SELECTOR = '[data-dynamic-year]';
   const V3_HEADING_REVEAL_SELECTOR = [
@@ -43,7 +48,7 @@
     legacyPolicy: 'preserve',
     observeMutations: true,
     version: '',
-    routes: [],
+    routes: SITE_ROUTE_VERSIONS,
     pageFunctions: ['nav', 'splideSlider'],
     disableDefaults: false,
     debug: new URLSearchParams(window.location.search).has('pattern-runtime-debug'),
@@ -111,6 +116,7 @@
     if (normalized === '2') return 'v2';
     if (normalized === '2l') return 'v2l';
     if (normalized === '3') return 'v3';
+    if (normalized === STANDALONE_VERSION) return STANDALONE_VERSION;
     return ALL_VERSIONS.includes(normalized) ? normalized : '';
   };
 
@@ -328,6 +334,7 @@
   };
 
   const appliesToVersion = (definition, version) => {
+    if (version === STANDALONE_VERSION) return false;
     const versions = definition.versions || ALL_VERSIONS;
     return versions === '*' || versions.includes(version);
   };
@@ -563,16 +570,21 @@
 
     const promise = new Promise((resolve, reject) => {
       const existing = [...document.querySelectorAll('link[rel="stylesheet"]')].find(
-        (link) => link.href === url,
+        (link) =>
+          link.href === url ||
+          (options.integrity && link.integrity === options.integrity),
       );
 
       if (existing?.dataset.patternRuntimeLoaded === 'true' || existing?.sheet) {
+        existing.dataset.patternAssetLoaded = 'true';
+        existing.dataset.patternRuntimeLoaded = 'true';
         resolve(existing);
         return;
       }
 
       const link = existing || document.createElement('link');
       const finish = () => {
+        link.dataset.patternAssetLoaded = 'true';
         link.dataset.patternRuntimeLoaded = 'true';
         resolve(link);
       };
@@ -768,6 +780,13 @@
         reason: detection.conflicts.length
           ? 'conflicting-version-markers'
           : 'unresolved-version',
+      };
+    }
+
+    if (detection.version === STANDALONE_VERSION) {
+      return {
+        allowed: false,
+        reason: 'standalone-page',
       };
     }
 
