@@ -1208,9 +1208,12 @@
       id: 'table-of-contents',
       versions: ALL_VERSIONS,
       match: () =>
-        Boolean(document.querySelector('#toc') && document.querySelector('#single-article')),
+        Boolean(
+          document.querySelector('#toc') &&
+            document.querySelector('#single-article, .pattern-library-v3--u-rich-text'),
+        ),
       script: {
-        src: `${LEGACY_BASE}/scripts/content/toc.js`,
+        src: '../content/toc.js',
       },
     });
 
