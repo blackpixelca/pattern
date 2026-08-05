@@ -1,0 +1,215 @@
+<!--
+  Pattern V3 Marketo loader
+
+  Required component-root attribute:
+  data-marketo-form-id = Marketo Form ID component prop
+
+  The loader waits until the component is within 1200px of the viewport.
+  It also starts immediately on pointer hover or focus.
+-->
+<form data-pattern-marketo-form aria-busy="true"></form>
+
+<script>
+  (() => {
+    "use strict";
+
+    const currentScript = document.currentScript;
+    const root = currentScript?.closest("[data-marketo-form-id]");
+    const formElement = root?.querySelector("[data-pattern-marketo-form]");
+    const formId = Number(root?.dataset.marketoFormId);
+
+    if (
+      !root ||
+      !formElement ||
+      !Number.isFinite(formId) ||
+      formId <= 0 ||
+      Math.floor(formId) !== formId
+    ) {
+      console.error(
+        "[Pattern Marketo] The component requires a valid data-marketo-form-id."
+      );
+      return;
+    }
+
+    formElement.id = `mktoForm_${formId}`;
+    root.dataset.marketoState = "waiting";
+
+    const shared = window.__patternMarketoLoader ||
+      (window.__patternMarketoLoader = {
+        scripts: new Map(),
+        forms: new Map()
+      });
+
+    const loadScript = ({
+      id,
+      src,
+      integrity,
+      crossOrigin
+    }) => {
+      if (shared.scripts.has(id)) return shared.scripts.get(id);
+
+      const existing = document.getElementById(id);
+      if (existing?.dataset.loaded === "true") {
+        const ready = Promise.resolve(existing);
+        shared.scripts.set(id, ready);
+        return ready;
+      }
+
+      const promise = new Promise((resolve, reject) => {
+        const script = existing || document.createElement("script");
+
+        const onLoad = () => {
+          script.dataset.loaded = "true";
+          resolve(script);
+        };
+
+        const onError = () => {
+          shared.scripts.delete(id);
+          reject(new Error(`[Pattern Marketo] Failed to load ${src}`));
+        };
+
+        script.addEventListener("load", onLoad, { once: true });
+        script.addEventListener("error", onError, { once: true });
+
+        if (!existing) {
+          script.id = id;
+          script.src = src;
+          script.async = true;
+
+          if (integrity) script.integrity = integrity;
+          if (crossOrigin) script.crossOrigin = crossOrigin;
+
+          document.head.appendChild(script);
+        }
+      });
+
+      shared.scripts.set(id, promise);
+      return promise;
+    };
+
+    const ensureForms2 = async () => {
+      if (window.MktoForms2) return window.MktoForms2;
+
+      await loadScript({
+        id: "pattern-marketo-forms2",
+        src: "https://go.pattern.com/js/forms2/js/forms2.min.js"
+      });
+
+      if (!window.MktoForms2) {
+        throw new Error("[Pattern Marketo] Forms2 did not initialize.");
+      }
+
+      return window.MktoForms2;
+    };
+
+    const ensurePrefillDependencies = async () => {
+      if (!window.FormsPlus) {
+        await loadScript({
+          id: "teknkl-FormsPlus-Core-1.x",
+          src: "https://cdn.jsdelivr.net/gh/specterstudio/pattern@c2386d587e9213612a86fd11f3b064a916d4d9fa/webflow/pattern.com/archive/legacy-root/teknkl-formsplus-core-1.0.8.js",
+          integrity: "sha384-60UgUbcTifZbziIk16cvowNgyR4Pz2ikeChra6FDsNP2BjcclxdRPPVnmwY4R8ja",
+          crossOrigin: "anonymous"
+        });
+      }
+
+      if (typeof window.SimpleDTO !== "function") {
+        await loadScript({
+          id: "teknkl-SimpleDTO-2.x",
+          src: "https://cdn.jsdelivr.net/gh/specterstudio/pattern@c2386d587e9213612a86fd11f3b064a916d4d9fa/webflow/pattern.com/archive/legacy-root/teknkl-simpledto-2.0.4.js",
+          integrity: "sha384-RcSIQ6Rqr6w3ya0l/Q0nuAVfVSN803IqIdTOL/elXbUNPn1NDUhiRDMxfZQYAKZm",
+          crossOrigin: "anonymous"
+        });
+      }
+
+      if (!window.FormsPlus || typeof window.SimpleDTO !== "function") {
+        throw new Error(
+          "[Pattern Marketo] SimpleDTO dependencies did not initialize."
+        );
+      }
+    };
+
+    const loadForm = async () => {
+      if (shared.forms.has(formId)) return shared.forms.get(formId);
+
+      const promise = (async () => {
+        const MktoForms2 = await ensureForms2();
+        const dependenciesReady = ensurePrefillDependencies();
+
+        const form = await new Promise((resolve, reject) => {
+          const existing = MktoForms2.getForm?.(formId);
+          if (existing) {
+            resolve(existing);
+            return;
+          }
+
+          try {
+            MktoForms2.loadForm(
+              "https://go.pattern.com",
+              "209-CDW-702",
+              formId,
+              resolve
+            );
+          } catch (error) {
+            reject(error);
+          }
+        });
+
+        await dependenciesReady;
+
+        const DTO = new SimpleDTO({
+          debug: false,
+          mode: "receive",
+          transport: "message",
+          messageSource: "https://go.pattern.com",
+          messageTarget: [window.location.origin],
+          dataSrc: "https://go.pattern.com/dtp-2.html",
+          cb(instance, mktoFields) {
+            form.setValuesCoerced(mktoFields);
+            DTO.cleanup();
+          }
+        });
+
+        root.dataset.marketoState = "ready";
+        formElement.setAttribute("aria-busy", "false");
+        return form;
+      })();
+
+      shared.forms.set(formId, promise);
+      return promise;
+    };
+
+    let started = false;
+    let observer;
+
+    const start = () => {
+      if (started) return;
+      started = true;
+      observer?.disconnect();
+      root.removeEventListener("pointerenter", start);
+      root.removeEventListener("focusin", start);
+      root.dataset.marketoState = "loading";
+
+      loadForm().catch((error) => {
+        shared.forms.delete(formId);
+        root.dataset.marketoState = "error";
+        formElement.setAttribute("aria-busy", "false");
+        console.error(error);
+      });
+    };
+
+    root.addEventListener("pointerenter", start, { once: true });
+    root.addEventListener("focusin", start, { once: true });
+
+    if ("IntersectionObserver" in window) {
+      observer = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((entry) => entry.isIntersecting)) start();
+        },
+        { rootMargin: "1200px 0px" }
+      );
+      observer.observe(root);
+    } else {
+      window.addEventListener("load", start, { once: true });
+    }
+  })();
+</script>
